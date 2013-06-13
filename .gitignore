@@ -21,3 +21,5 @@ _testmain.go
 
 *.exe
 go-man
+# ignore game saves
+gamedata/*

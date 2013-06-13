@@ -3,11 +3,12 @@ package models
 import (
 	"bufio"
 	"fmt"
+	"github.com/telecoda/go-man/utils"
 	"os"
 )
 
 type GameBoard struct {
-	Id         int
+	Id         string
 	Name       string
 	BoardCells [][]byte
 }
@@ -21,6 +22,8 @@ http://4coder.org/c-c-source-code/152/pacman/board.c.html
 */
 
 var defaultBoard [][]byte
+
+var persister = NewFilePersister()
 
 func init() {
 	initGameBoard()
@@ -60,9 +63,22 @@ func initGameBoard() {
 func NewGameBoard() *GameBoard {
 	gameBoard := new(GameBoard)
 
-	gameBoard.Id = 123
+	id, err := utils.GenUUID()
+	if err != nil {
+		fmt.Println("Error generating guid")
+		return nil
+	}
+	gameBoard.Id = id
 	gameBoard.Name = "Init name"
 	gameBoard.BoardCells = defaultBoard
 
 	return gameBoard
+}
+
+func (model *GameBoard) SaveGameBoard() {
+	persister.Save(model)
+}
+
+func LoadGameBoard(id string) (*GameBoard, error) {
+	return persister.Load(id)
 }

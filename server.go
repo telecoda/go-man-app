@@ -14,8 +14,9 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", controllers.RootHandler)
-	r.HandleFunc("/games", controllers.GameListHandler).Methods("GET")
-	r.HandleFunc("/games", controllers.GameCreateHandler).Methods("POST")
+	r.HandleFunc("/games", controllers.GameList).Methods("GET")
+	r.HandleFunc("/games", controllers.GameCreate).Methods("POST")
+	r.HandleFunc("/games/{id}", controllers.GameById).Methods("GET")
 	http.Handle("/", r)
 
 	fmt.Println("go-man server running")
