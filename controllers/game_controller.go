@@ -95,25 +95,27 @@ func NewGameBoard() *models.GameBoard {
 
 func NewPlayer() *models.Player {
 	//return &models.Player{Location: {0, 0}, Id: 1, Type: models.PlayerType.GoMan}
-	player := models.Player{
-		Location: models.Point{models.PLAYER_START_X, models.PLAYER_START_Y},
-		Id:       1,
-	}
-	return &player
+	//player := models.Player{
+	//	Location: models.Point{models.PLAYER_START_X, models.PLAYER_START_Y},
+	//	Id:       1,
+	//}
+
+	player := new(models.Player)
+	player.Location = models.Point{models.PLAYER_START_X, models.PLAYER_START_Y}
+
+	player.Id, _ = utils.GenUUID()
+
+	return player
 }
 
 func GameById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
 	vars := mux.Vars(r)
-	id := vars["id"]
+	gameId := vars["gameId"]
 
-	fmt.Println("Getting game board", id)
-	var board, err = models.LoadGameBoard(id)
-
-	if board == nil || err != nil {
-		http.NotFound(w, r)
-	}
+	fmt.Println("Getting game board", gameId)
+	var board, err = models.LoadGameBoard(gameId)
 
 	fmt.Println("Loaded board", board)
 
@@ -124,4 +126,32 @@ func GameById(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprint(w, string(bJson))
 	}
+}
+
+func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Add("Content-Type", "application/json")
+
+	// fetch latest board
+	vars := mux.Vars(r)
+	gameId := vars["gameId"]
+	// get player from body of PUT request
+	player := new(models.Player)
+
+	fmt.Println("Getting game board", gameId)
+	var board, err = models.LoadGameBoard(gameId)
+
+	if board == nil || err != nil {
+		http.NotFound(w, r)
+	}
+
+	// verify play belongs to this gameboard
+	if playerInGame(board, player) {
+
+	}
+
+}
+
+func playerInGame(board *models.GameBoard, player *models.Player) bool {
+	return true
 }

@@ -21,7 +21,7 @@ const (
 
 type Player struct {
 	Location Point
-	Id       int
+	Id       string
 	Type     PlayerType
 }
 
