@@ -16,16 +16,22 @@ http://4coder.org/c-c-source-code/152/pacman/board.c.html
 
 */
 
-var defaultBoard [][]byte
+var defaultBoard [][]rune
+
+func AddResponseHeaders(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	// allow cross origin requests
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+}
 
 func GameList(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+	AddResponseHeaders(w)
 	fmt.Fprint(w, Response{"success": true, "message": "Here are the current games", "method": r.Method})
 }
 
 func GameCreate(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
 
+	AddResponseHeaders(w)
 	var board = NewGameBoard()
 
 	board.SaveGameBoard()
@@ -45,7 +51,7 @@ func init() {
 
 func initGameBoard() {
 
-	defaultBoard = make([][]byte, models.BOARD_HEIGHT)
+	defaultBoard = make([][]rune, models.BOARD_HEIGHT)
 
 	// read data from maze.dat
 	f, err := os.Open("data/maze.txt")
@@ -53,19 +59,27 @@ func initGameBoard() {
 		fmt.Printf("error opening file: %v\n", err)
 		os.Exit(1)
 	}
-	r := bufio.NewReader(f)
+	reader := bufio.NewReader(f)
 
-	var i int = 0
+	var r int = 0
 	for {
 
-		b, err := r.ReadBytes('\n')
+		b, err := reader.ReadBytes('\n')
 		if err == nil {
 			// parse line
 
 			b = b[:len(b)-1] // remove last new line char from bytes
-			defaultBoard[i] = b
-			fmt.Println(string(defaultBoard[i]))
-			i++
+			row := string(b)
+			fmt.Println("Processing row:", r, row)
+			defaultBoard[r] = make([]rune, models.BOARD_WIDTH)
+			for c, cell := range row {
+				fmt.Println("Cell:", c, cell)
+				defaultBoard[r][c] = rune(cell)
+				c++
+				//fmt.Println(defaultBoard[r])
+
+			}
+			r++
 		} else {
 			break
 		}
@@ -109,7 +123,8 @@ func NewPlayer() *models.Player {
 }
 
 func GameById(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+
+	AddResponseHeaders(w)
 
 	vars := mux.Vars(r)
 	gameId := vars["gameId"]
@@ -117,7 +132,7 @@ func GameById(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Getting game board", gameId)
 	var board, err = models.LoadGameBoard(gameId)
 
-	fmt.Println("Loaded board", board)
+	//fmt.Println("Loaded board", board)
 
 	bJson, err := json.Marshal(board)
 
@@ -130,7 +145,7 @@ func GameById(w http.ResponseWriter, r *http.Request) {
 
 func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
-	w.Header().Add("Content-Type", "application/json")
+	AddResponseHeaders(w)
 
 	// fetch latest board
 	vars := mux.Vars(r)

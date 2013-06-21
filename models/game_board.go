@@ -29,7 +29,7 @@ type GameBoard struct {
 	Id         string
 	Name       string
 	MainPlayer Player
-	BoardCells [][]byte
+	BoardCells [][]rune
 }
 
 const BOARD_WIDTH int = 28
