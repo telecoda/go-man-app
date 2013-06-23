@@ -23,6 +23,7 @@ type Player struct {
 	Location Point
 	Id       string
 	Type     PlayerType
+	State    PlayerState
 }
 
 type GameBoard struct {
@@ -40,8 +41,8 @@ const PLAYER_START_Y = 14
 
 var persister = NewFilePersister()
 
-func (model *GameBoard) SaveGameBoard() {
-	persister.Save(model)
+func (model *GameBoard) SaveGameBoard() error {
+	return persister.Save(model)
 }
 
 func LoadGameBoard(id string) (*GameBoard, error) {

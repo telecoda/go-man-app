@@ -24,6 +24,14 @@ func AddResponseHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+func OptionsHandler(w http.ResponseWriter, r *http.Request) {
+	AddResponseHeaders(w)
+	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT")
+	w.Header().Add("X-Customer", "Custom")
+
+	fmt.Fprint(w, Response{"success": true, "message": "Welcome to go-man options", "method": r.Method})
+}
+
 func GameList(w http.ResponseWriter, r *http.Request) {
 	AddResponseHeaders(w)
 	fmt.Fprint(w, Response{"success": true, "message": "Here are the current games", "method": r.Method})
@@ -143,15 +151,13 @@ func GameById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
+func MovePlayerRight(w http.ResponseWriter, r *http.Request) {
 
 	AddResponseHeaders(w)
 
 	// fetch latest board
 	vars := mux.Vars(r)
 	gameId := vars["gameId"]
-	// get player from body of PUT request
-	player := new(models.Player)
 
 	fmt.Println("Getting game board", gameId)
 	var board, err = models.LoadGameBoard(gameId)
@@ -160,13 +166,22 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}
 
-	// verify play belongs to this gameboard
-	if playerInGame(board, player) {
+	// move player right
+	board.MainPlayer.Location.X++
 
+	fmt.Println("Save game board", gameId)
+	err = board.SaveGameBoard()
+
+	if err != nil {
+		fmt.Println(err)
 	}
 
-}
+	// convert back to JSON & return to client
+	bJson, err := json.Marshal(board)
 
-func playerInGame(board *models.GameBoard, player *models.Player) bool {
-	return true
+	if err != nil {
+		fmt.Println("error:", err)
+	} else {
+		fmt.Fprint(w, string(bJson))
+	}
 }

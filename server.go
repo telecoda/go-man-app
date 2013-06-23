@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("go-man server starting")
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", controllers.RootHandler)
+	r.HandleFunc("/", controllers.RootHandler).Methods("GET")
 	// list games
 	r.HandleFunc("/games", controllers.GameList).Methods("GET")
 	// create new game
@@ -21,7 +21,11 @@ func main() {
 	// get game by id
 	r.HandleFunc("/games/{gameId}", controllers.GameById).Methods("GET")
 	// request player move
-	r.HandleFunc("/games/{gameId}/player", controllers.UpdatePlayer).Methods("PUT")
+	r.HandleFunc("/games/{gameId}/moveright", controllers.MovePlayerRight).Methods("PUT")
+
+	// options
+	r.HandleFunc("/{path:.*}", controllers.OptionsHandler).Methods("OPTIONS")
+
 	http.Handle("/", r)
 
 	fmt.Println("go-man server running")
