@@ -1,14 +1,12 @@
 package controllers
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/telecoda/go-man/models"
-	"github.com/telecoda/go-man/utils"
+	"log"
 	"net/http"
-	"os"
 )
 
 /* Thanks to the following source for an ASCII version of the game board
@@ -16,150 +14,58 @@ http://4coder.org/c-c-source-code/152/pacman/board.c.html
 
 */
 
-var defaultBoard [][]rune
-
-func AddResponseHeaders(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-	// allow cross origin requests
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-}
-
-func OptionsHandler(w http.ResponseWriter, r *http.Request) {
-	AddResponseHeaders(w)
-	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT")
-	w.Header().Add("X-Customer", "Custom")
-
-	fmt.Fprint(w, Response{"success": true, "message": "Welcome to go-man options", "method": r.Method})
-}
-
 func GameList(w http.ResponseWriter, r *http.Request) {
-	AddResponseHeaders(w)
+	addResponseHeaders(w)
 	fmt.Fprint(w, Response{"success": true, "message": "Here are the current games", "method": r.Method})
 }
 
 func GameCreate(w http.ResponseWriter, r *http.Request) {
 
-	AddResponseHeaders(w)
-	var board = NewGameBoard()
+	log.Println("GameCreate started")
+	addResponseHeaders(w)
+
+	var board = newGameBoard()
 
 	board.SaveGameBoard()
 
-	bJson, err := json.Marshal(board)
-
-	if err != nil {
-		fmt.Println("error:", err)
-	} else {
-		fmt.Fprint(w, string(bJson))
-	}
-}
-
-func init() {
-	initGameBoard()
-}
-
-func initGameBoard() {
-
-	defaultBoard = make([][]rune, models.BOARD_HEIGHT)
-
-	// read data from maze.dat
-	f, err := os.Open("data/maze.txt")
-	if err != nil {
-		fmt.Printf("error opening file: %v\n", err)
-		os.Exit(1)
-	}
-	reader := bufio.NewReader(f)
-
-	var r int = 0
-	for {
-
-		b, err := reader.ReadBytes('\n')
-		if err == nil {
-			// parse line
-
-			b = b[:len(b)-1] // remove last new line char from bytes
-			row := string(b)
-			fmt.Println("Processing row:", r, row)
-			defaultBoard[r] = make([]rune, models.BOARD_WIDTH)
-			for c, cell := range row {
-				fmt.Println("Cell:", c, cell)
-				defaultBoard[r][c] = rune(cell)
-				c++
-				//fmt.Println(defaultBoard[r])
-
-			}
-			r++
-		} else {
-			break
-		}
-
-	}
-
-}
-
-func NewGameBoard() *models.GameBoard {
-	initGameBoard()
-	gameBoard := new(models.GameBoard)
-
-	id, err := utils.GenUUID()
-	if err != nil {
-		fmt.Println("Error generating guid")
-		return nil
-	}
-	gameBoard.Id = id
-	gameBoard.Name = "Init name"
-	gameBoard.BoardCells = defaultBoard
-
-	// init players
-	gameBoard.MainPlayer = *NewPlayer()
-
-	return gameBoard
-}
-
-func NewPlayer() *models.Player {
-	//return &models.Player{Location: {0, 0}, Id: 1, Type: models.PlayerType.GoMan}
-	//player := models.Player{
-	//	Location: models.Point{models.PLAYER_START_X, models.PLAYER_START_Y},
-	//	Id:       1,
-	//}
-
-	player := new(models.Player)
-	player.Location = models.Point{models.PLAYER_START_X, models.PLAYER_START_Y}
-
-	player.Id, _ = utils.GenUUID()
-
-	return player
+	log.Println("GameCreate finshed")
+	returnBoardAsJson(w, board)
 }
 
 func GameById(w http.ResponseWriter, r *http.Request) {
 
-	AddResponseHeaders(w)
+	addResponseHeaders(w)
 
 	vars := mux.Vars(r)
 	gameId := vars["gameId"]
 
-	fmt.Println("Getting game board", gameId)
-	var board, err = models.LoadGameBoard(gameId)
-
-	//fmt.Println("Loaded board", board)
-
-	bJson, err := json.Marshal(board)
+	board, err := models.LoadGameBoard(gameId)
 
 	if err != nil {
-		fmt.Println("error:", err)
-	} else {
-		fmt.Fprint(w, string(bJson))
+		http.NotFound(w, r)
+		return
 	}
+
+	returnBoardAsJson(w, board)
+
+}
+
+func returnBoardAsJson(w http.ResponseWriter, board *models.GameBoard) {
+
+	json.NewEncoder(w).Encode(&board)
+
 }
 
 func MovePlayerRight(w http.ResponseWriter, r *http.Request) {
 
-	AddResponseHeaders(w)
+	addResponseHeaders(w)
 
 	// fetch latest board
 	vars := mux.Vars(r)
 	gameId := vars["gameId"]
 
 	fmt.Println("Getting game board", gameId)
+
 	var board, err = models.LoadGameBoard(gameId)
 
 	if board == nil || err != nil {
@@ -176,12 +82,57 @@ func MovePlayerRight(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	// convert back to JSON & return to client
-	bJson, err := json.Marshal(board)
+	returnBoardAsJson(w, board)
+}
+
+// received MainPlayer as JSON request
+func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
+
+	addResponseHeaders(w)
+
+	jsonBody, err := getRequestBody(r)
+
+	// unmarshall Player request
+	mainPlayer, err := unmarshallPlayer(jsonBody)
 
 	if err != nil {
-		fmt.Println("error:", err)
-	} else {
-		fmt.Fprint(w, string(bJson))
+		http.Error(w, "Failed to unmarshall player", http.StatusInternalServerError)
 	}
+
+	// fetch current board
+	vars := mux.Vars(r)
+	gameId := vars["gameId"]
+
+	fmt.Println("Getting game board", gameId)
+	board, err := models.LoadGameBoard(gameId)
+
+	if board == nil || err != nil {
+		http.NotFound(w, r)
+	}
+
+	// update board with player
+
+	board.MainPlayer.Location = mainPlayer.Location
+
+	// move player right
+	//board.MainPlayer.Location.X++
+
+	fmt.Println("Save game board", gameId)
+	err = board.SaveGameBoard()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	returnBoardAsJson(w, board)
+}
+
+func unmarshallPlayer(jsonBody []byte) (*models.Player, error) {
+
+	var mainPlayer models.Player
+
+	err := json.Unmarshal(jsonBody, &mainPlayer)
+
+	return &mainPlayer, err
+
 }

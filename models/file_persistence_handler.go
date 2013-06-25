@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/telecoda/go-man/utils"
 	"io/ioutil"
 )
 
@@ -24,12 +25,12 @@ func (p *Persister) Save(board *GameBoard) (err error) {
 
 	fmt.Println("Saving gameboard as JSON:", board.Id)
 
-	filename := "gamedata/" + board.Id + ".json"
+	filePath := utils.GetAbsolutePathOfCurrentPackage("../gamedata/" + board.Id + ".json")
 
 	// convert to JSON for saving to file (binary would be quicker...)
 	bJson, err := json.Marshal(board)
 
-	err = ioutil.WriteFile(filename, bJson, 0600)
+	err = ioutil.WriteFile(filePath, bJson, 0600)
 
 	if err != nil {
 		fmt.Println("Error saving file", err)
@@ -45,9 +46,9 @@ func (p *Persister) Load(id string) (*GameBoard, error) {
 
 	fmt.Println("Loading gameboard:", id)
 
-	filename := "gamedata/" + id + ".json"
+	filePath := utils.GetAbsolutePathOfCurrentPackage("../gamedata/" + id + ".json")
 
-	bJson, err := ioutil.ReadFile(filename)
+	bJson, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		fmt.Println("Error saving file", err)
 		return nil, err
@@ -60,5 +61,5 @@ func (p *Persister) Load(id string) (*GameBoard, error) {
 	err = json.Unmarshal(bJson, &board)
 
 	fmt.Println("Loaded gameboard")
-	return &board, nil
+	return &board, err
 }
