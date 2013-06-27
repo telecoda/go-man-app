@@ -31,6 +31,7 @@ func OptionsHandler(w http.ResponseWriter, r *http.Request) {
 
 	addResponseHeaders(w)
 	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT")
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 
 	fmt.Fprint(w, Response{"success": true, "message": "Welcome to go-man options", "method": r.Method})
 }

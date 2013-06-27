@@ -37,10 +37,10 @@ func initGameBoard() {
 
 			b = b[:len(b)-1] // remove last new line char from bytes
 			row := string(b)
-			fmt.Println("Processing row:", r, row)
+			//fmt.Println("Processing row:", r, row)
 			defaultBoard[r] = make([]rune, models.BOARD_WIDTH)
 			for c, cell := range row {
-				fmt.Println("Cell:", c, cell)
+				//fmt.Println("Cell:", c, cell)
 				defaultBoard[r][c] = rune(cell)
 				c++
 				//fmt.Println(defaultBoard[r])

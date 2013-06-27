@@ -88,15 +88,21 @@ func MovePlayerRight(w http.ResponseWriter, r *http.Request) {
 // received MainPlayer as JSON request
 func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
+	fmt.Println("Update player started")
 	addResponseHeaders(w)
 
 	jsonBody, err := getRequestBody(r)
+	if err != nil {
+		http.Error(w, "Failed to get request body", http.StatusInternalServerError)
+		return
+	}
 
 	// unmarshall Player request
 	mainPlayer, err := unmarshallPlayer(jsonBody)
 
 	if err != nil {
 		http.Error(w, "Failed to unmarshall player", http.StatusInternalServerError)
+		return
 	}
 
 	// fetch current board
@@ -108,6 +114,7 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 	if board == nil || err != nil {
 		http.NotFound(w, r)
+		return
 	}
 
 	// update board with player
@@ -122,6 +129,9 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
 	}
 
 	returnBoardAsJson(w, board)
