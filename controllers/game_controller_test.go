@@ -28,8 +28,6 @@ func TestCreateGame(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("TestCreateGame ended")
-
 	if jsonBody == nil {
 		log.Fatal("No json returned")
 	}
@@ -51,5 +49,82 @@ func TestCreateGame(t *testing.T) {
 	if len(board.Id) == 0 {
 		log.Fatal("No gameboard.Id")
 	}
+
+	fmt.Println("TestCreateGame ended")
+
+}
+
+func TestIsMoveValidWorksWithValidXMove(t *testing.T) {
+
+	fmt.Println("TestIsMoveValidWorksWithValidXMove started")
+
+	existingLocation := &models.Point{10, 10}
+	newLocation := &models.Point{11, 10}
+
+	if !isMoveValid(existingLocation, newLocation) {
+		log.Fatal("isMoveValid should allow this move")
+	}
+
+	fmt.Println("TestIsMoveValidWorksWithValidXMove ended")
+
+}
+
+func TestIsMoveValidFailsWithInvalidXMove(t *testing.T) {
+
+	fmt.Println("TestIsMoveValidFailsWithInvalidXMove started")
+
+	existingLocation := &models.Point{10, 10}
+	newLocation := &models.Point{13, 10}
+
+	if isMoveValid(existingLocation, newLocation) {
+		log.Fatal("isMoveValid should NOT allow this move")
+	}
+
+	fmt.Println("TestIsMoveValidFailsWithInvalidXMove ended")
+
+}
+
+func TestIsMoveValidWorksWithValidYMove(t *testing.T) {
+
+	fmt.Println("TestIsMoveValidWorksWithValidXMove started")
+
+	existingLocation := &models.Point{10, 10}
+	newLocation := &models.Point{10, 11}
+
+	if !isMoveValid(existingLocation, newLocation) {
+		log.Fatal("isMoveValid should allow this move")
+	}
+
+	fmt.Println("TestIsMoveValidWorksWithValidYMove ended")
+
+}
+
+func TestIsMoveValidFailsWithInvalidYMove(t *testing.T) {
+
+	fmt.Println("TestIsMoveValidFailsWithInvalidYMove started")
+
+	existingLocation := &models.Point{10, 10}
+	newLocation := &models.Point{10, 7}
+
+	if isMoveValid(existingLocation, newLocation) {
+		log.Fatal("isMoveValid should NOT allow this move")
+	}
+
+	fmt.Println("TestIsMoveValidFailsWithInvalidYMove ended")
+
+}
+
+func TestIsMoveValidFailsWithInvalidXYMove(t *testing.T) {
+
+	fmt.Println("TestIsMoveValidFailsWithInvalidXYMove started")
+
+	existingLocation := &models.Point{10, 10}
+	newLocation := &models.Point{11, 11}
+
+	if isMoveValid(existingLocation, newLocation) {
+		log.Fatal("isMoveValid should NOT allow this move")
+	}
+
+	fmt.Println("TestIsMoveValidFailsWithInvalidXYMove ended")
 
 }

@@ -22,8 +22,6 @@ func main() {
 	r.HandleFunc("/games/{gameId}", controllers.GameById).Methods("GET")
 	// update MainPlayer
 	r.HandleFunc("/games/{gameId}", controllers.UpdatePlayer).Methods("PUT")
-	// request player move
-	r.HandleFunc("/games/{gameId}/moveright", controllers.MovePlayerRight).Methods("PUT")
 
 	// options
 	r.HandleFunc("/{path:.*}", controllers.OptionsHandler).Methods("OPTIONS")

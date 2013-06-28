@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/telecoda/go-man/models"
 	"log"
+	"math"
 	"net/http"
 )
 
@@ -56,35 +57,6 @@ func returnBoardAsJson(w http.ResponseWriter, board *models.GameBoard) {
 
 }
 
-func MovePlayerRight(w http.ResponseWriter, r *http.Request) {
-
-	addResponseHeaders(w)
-
-	// fetch latest board
-	vars := mux.Vars(r)
-	gameId := vars["gameId"]
-
-	fmt.Println("Getting game board", gameId)
-
-	var board, err = models.LoadGameBoard(gameId)
-
-	if board == nil || err != nil {
-		http.NotFound(w, r)
-	}
-
-	// move player right
-	board.MainPlayer.Location.X++
-
-	fmt.Println("Save game board", gameId)
-	err = board.SaveGameBoard()
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	returnBoardAsJson(w, board)
-}
-
 // received MainPlayer as JSON request
 func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
@@ -117,8 +89,22 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// update board with player
+	// check move is valid
+	if !isMoveValid(&board.MainPlayer.Location, &mainPlayer.Location) {
+		// bad move
+		fmt.Println("Cheat, invalid move")
+		http.Error(w, "Invalid move, tried to move too many space. Cheater!", http.StatusBadRequest)
+		return
+	}
 
+	// check for walls
+	if isCellAWall(&mainPlayer.Location, board.BoardCells) {
+		// bad move
+		fmt.Println("Hit a wall", mainPlayer.Location)
+		http.Error(w, "Invalid move, you can't walk through walls", http.StatusBadRequest)
+		return
+	}
+	// update board with player
 	board.MainPlayer.Location = mainPlayer.Location
 
 	// move player right
@@ -135,6 +121,38 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	returnBoardAsJson(w, board)
+
+}
+
+func isCellAWall(existingLocation *models.Point, boardCells [][]rune) bool {
+
+	if boardCells[existingLocation.Y][existingLocation.X] == rune('#') {
+		return true
+	} else {
+		return false
+	}
+}
+
+func isMoveValid(existingLocation *models.Point, newLocation *models.Point) bool {
+
+	// player can only move in one direction at a time
+	// player can only move one cell at a time
+
+	distX := math.Abs(float64(existingLocation.X - newLocation.X))
+	distY := math.Abs(float64(existingLocation.Y - newLocation.Y))
+
+	// moved more than one cell
+	if distX > 1 || distY > 1 {
+		return false
+	}
+
+	// moved more than one direction
+	if distX > 0 && distY > 0 {
+		return false
+	}
+
+	// valid move
+	return true
 }
 
 func unmarshallPlayer(jsonBody []byte) (*models.Player, error) {
