@@ -1,6 +1,9 @@
 package models
 
-import "math"
+import (
+	"errors"
+	"math"
+)
 
 type Point struct {
 	X, Y int
@@ -56,6 +59,24 @@ func (model *GameBoard) SaveGameBoard() error {
 
 func LoadGameBoard(id string) (*GameBoard, error) {
 	return persister.Load(id)
+}
+
+func (model *GameBoard) MovePlayer(player *Player) error {
+	// check move is valid
+	if !IsMoveValid(&model.MainPlayer.Location, &player.Location) {
+		// bad move
+		return errors.New("Cheat, invalid move")
+	}
+
+	// check for walls
+	if model.IsCellAWall(&player.Location) {
+		// bad move
+		return errors.New("Invalid move, you can't walk through walls")
+	}
+	// update board with player
+	model.MainPlayer.Location = player.Location
+
+	return nil
 }
 
 func (model *GameBoard) IsCellAWall(checkLocation *Point) bool {
