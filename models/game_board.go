@@ -1,5 +1,7 @@
 package models
 
+import "math"
+
 type Point struct {
 	X, Y int
 }
@@ -54,6 +56,37 @@ func (model *GameBoard) SaveGameBoard() error {
 
 func LoadGameBoard(id string) (*GameBoard, error) {
 	return persister.Load(id)
+}
+
+func (model *GameBoard) IsCellAWall(checkLocation *Point) bool {
+
+	if model.BoardCells[checkLocation.Y][checkLocation.X] == WALL {
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsMoveValid(existingLocation *Point, newLocation *Point) bool {
+
+	// player can only move in one direction at a time
+	// player can only move one cell at a time
+
+	distX := math.Abs(float64(existingLocation.X - newLocation.X))
+	distY := math.Abs(float64(existingLocation.Y - newLocation.Y))
+
+	// moved more than one cell
+	if distX > 1 || distY > 1 {
+		return false
+	}
+
+	// moved more than one direction
+	if distX > 0 && distY > 0 {
+		return false
+	}
+
+	// valid move
+	return true
 }
 
 func (model *GameBoard) UpdatePillsRemaining() {

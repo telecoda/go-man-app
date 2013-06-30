@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/telecoda/go-man/models"
 	"log"
-	"math"
 	"net/http"
 )
 
@@ -90,7 +89,7 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check move is valid
-	if !isMoveValid(&board.MainPlayer.Location, &mainPlayer.Location) {
+	if !models.IsMoveValid(&board.MainPlayer.Location, &mainPlayer.Location) {
 		// bad move
 		fmt.Println("Cheat, invalid move")
 		http.Error(w, "Invalid move, tried to move too many space. Cheater!", http.StatusBadRequest)
@@ -98,7 +97,7 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for walls
-	if isCellAWall(&mainPlayer.Location, board.BoardCells) {
+	if board.IsCellAWall(&mainPlayer.Location) {
 		// bad move
 		fmt.Println("Hit a wall", mainPlayer.Location)
 		http.Error(w, "Invalid move, you can't walk through walls", http.StatusBadRequest)
@@ -124,15 +123,7 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func isCellAWall(existingLocation *models.Point, boardCells [][]rune) bool {
-
-	if boardCells[existingLocation.Y][existingLocation.X] == models.WALL {
-		return true
-	} else {
-		return false
-	}
-}
-
+/*
 func isMoveValid(existingLocation *models.Point, newLocation *models.Point) bool {
 
 	// player can only move in one direction at a time
@@ -154,6 +145,8 @@ func isMoveValid(existingLocation *models.Point, newLocation *models.Point) bool
 	// valid move
 	return true
 }
+
+*/
 
 func unmarshallPlayer(jsonBody []byte) (*models.Player, error) {
 
