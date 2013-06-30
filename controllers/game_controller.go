@@ -90,27 +90,6 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 	err = board.MovePlayer(mainPlayer)
 
-	/*
-		// check move is valid
-		if !models.IsMoveValid(&board.MainPlayer.Location, &mainPlayer.Location) {
-			// bad move
-			fmt.Println("Cheat, invalid move")
-			http.Error(w, "Invalid move, tried to move too many space. Cheater!", http.StatusBadRequest)
-			return
-		}
-
-		// check for walls
-		if board.IsCellAWall(&mainPlayer.Location) {
-			// bad move
-			fmt.Println("Hit a wall", mainPlayer.Location)
-			http.Error(w, "Invalid move, you can't walk through walls", http.StatusBadRequest)
-			return
-		}
-		// update board with player
-		board.MainPlayer.Location = mainPlayer.Location
-
-	*/
-
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -130,31 +109,6 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 	returnBoardAsJson(w, board)
 
 }
-
-/*
-func isMoveValid(existingLocation *models.Point, newLocation *models.Point) bool {
-
-	// player can only move in one direction at a time
-	// player can only move one cell at a time
-
-	distX := math.Abs(float64(existingLocation.X - newLocation.X))
-	distY := math.Abs(float64(existingLocation.Y - newLocation.Y))
-
-	// moved more than one cell
-	if distX > 1 || distY > 1 {
-		return false
-	}
-
-	// moved more than one direction
-	if distX > 0 && distY > 0 {
-		return false
-	}
-
-	// valid move
-	return true
-}
-
-*/
 
 func unmarshallPlayer(jsonBody []byte) (*models.Player, error) {
 

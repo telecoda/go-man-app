@@ -66,6 +66,8 @@ func newGameBoard() *models.GameBoard {
 	}
 	gameBoard.Id = id
 	gameBoard.Name = "Init name"
+	gameBoard.Score = 0
+	gameBoard.Lives = 3
 	gameBoard.BoardCells = defaultBoard
 
 	gameBoard.UpdatePillsRemaining()

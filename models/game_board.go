@@ -35,6 +35,8 @@ type GameBoard struct {
 	Id             string
 	Name           string
 	PillsRemaining int
+	Score          int
+	Lives          int
 	MainPlayer     Player
 	BoardCells     [][]rune
 }
@@ -50,6 +52,9 @@ const WALL = '#'
 const PILL = '.'
 const POWER_PILL = 'P'
 const BONUS = '$'
+
+// points
+const PILL_POINTS = 10
 
 var persister = NewFilePersister()
 
@@ -68,24 +73,41 @@ func (model *GameBoard) MovePlayer(player *Player) error {
 		return errors.New("Cheat, invalid move")
 	}
 
-	// check for walls
-	if model.IsCellAWall(&player.Location) {
-		// bad move
+	cell := model.GetCellAtLocation(&player.Location)
+
+	switch cell {
+	case WALL:
 		return errors.New("Invalid move, you can't walk through walls")
+	case PILL:
+		model.eatPillAtLocation(&player.Location)
+		break
 	}
+
 	// update board with player
 	model.MainPlayer.Location = player.Location
 
 	return nil
 }
 
-func (model *GameBoard) IsCellAWall(checkLocation *Point) bool {
+func (model *GameBoard) eatPillAtLocation(location *Point) {
+	// increase score
+	model.Score += PILL_POINTS
+	// decrease pills
+	model.PillsRemaining--
+	// clear cell
+	model.ClearCellAtLocation(location)
+}
 
-	if model.BoardCells[checkLocation.Y][checkLocation.X] == WALL {
-		return true
-	} else {
-		return false
-	}
+func (model *GameBoard) GetCellAtLocation(checkLocation *Point) rune {
+
+	return model.BoardCells[checkLocation.Y][checkLocation.X]
+
+}
+
+func (model *GameBoard) ClearCellAtLocation(checkLocation *Point) {
+
+	model.BoardCells[checkLocation.Y][checkLocation.X] = ' '
+
 }
 
 func IsMoveValid(existingLocation *Point, newLocation *Point) bool {
