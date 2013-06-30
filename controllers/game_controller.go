@@ -126,7 +126,7 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 func isCellAWall(existingLocation *models.Point, boardCells [][]rune) bool {
 
-	if boardCells[existingLocation.Y][existingLocation.X] == rune('#') {
+	if boardCells[existingLocation.Y][existingLocation.X] == models.WALL {
 		return true
 	} else {
 		return false

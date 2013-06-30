@@ -68,6 +68,8 @@ func newGameBoard() *models.GameBoard {
 	gameBoard.Name = "Init name"
 	gameBoard.BoardCells = defaultBoard
 
+	gameBoard.UpdatePillsRemaining()
+
 	// init players
 	gameBoard.MainPlayer = *newPlayer()
 
