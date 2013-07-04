@@ -100,20 +100,17 @@ func (board *GameBoard) MovePlayer(player *Player) error {
 
 	// only allow moves when game playing
 	if board.State != PlayingGame {
-		// bad move
 		return errors.New("Not ready, please wait")
 	}
 
 	// check if player belongs to this game
 	playerServerState := board.getPlayerFromServer(player.Id)
 	if playerServerState == nil {
-		// not in this game
 		return errors.New("You are not a player in this game.")
 	}
 
 	// check move is valid
 	if !isMoveValid(&playerServerState.Location, &player.Location) {
-		// bad move
 		return errors.New("Cheat, invalid move")
 	}
 
@@ -134,11 +131,8 @@ func (board *GameBoard) MovePlayer(player *Player) error {
 }
 
 func (board *GameBoard) eatPillAtLocation(location *Point) {
-	// increase score
 	board.Score += PILL_POINTS
-	// decrease pills
 	board.PillsRemaining--
-	// clear cell
 	board.ClearCellAtLocation(location)
 }
 
@@ -224,14 +218,10 @@ func initGameBoard() {
 
 			b = b[:len(b)-1] // remove last new line char from bytes
 			row := string(b)
-			//fmt.Println("Processing row:", r, row)
 			defaultBoard[r] = make([]rune, BOARD_WIDTH)
 			for c, cell := range row {
-				//fmt.Println("Cell:", c, cell)
 				defaultBoard[r][c] = rune(cell)
 				c++
-				//fmt.Println(defaultBoard[r])
-
 			}
 			r++
 		} else {
@@ -271,12 +261,24 @@ func NewGameBoard() *GameBoard {
 
 func (board *GameBoard) AddPlayer(newPlayer *Player) (*Player, error) {
 
+	if newPlayer.Type != GoMan && newPlayer.Type != GoGhost {
+		return nil, errors.New("Invalid player type")
+	}
+
+	ghostCount := board.countGhosts()
+	goMenCount := board.countGoMen()
+
+	if newPlayer.Type == GoGhost && ghostCount >= MAX_GOMAN_GHOSTS {
+		return nil, errors.New("Cannot add anymore ghosts to game")
+	}
+
+	if newPlayer.Type == GoMan && goMenCount >= MAX_GOMAN_PLAYERS {
+		return nil, errors.New("Cannot add anymore go-men to game")
+	}
+
 	newPlayer.Location = Point{PLAYER_START_X, PLAYER_START_Y}
-
 	newPlayer.Id, _ = utils.GenUUID()
-
 	newPlayer.State = Alive
-
 	board.Players = append(board.Players, *newPlayer)
 
 	return newPlayer, nil
@@ -291,4 +293,15 @@ func (board *GameBoard) countGhosts() int {
 	}
 
 	return totalGhosts
+}
+
+func (board *GameBoard) countGoMen() int {
+	totalGoMen := 0
+	for _, player := range board.Players {
+		if player.Type == GoMan {
+			totalGoMen++
+		}
+	}
+
+	return totalGoMen
 }

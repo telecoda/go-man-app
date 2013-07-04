@@ -139,6 +139,7 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 	// fetch current board
 	vars := mux.Vars(r)
 	gameId := vars["gameId"]
+	//playerId := vars["playerId"]
 
 	fmt.Println("Getting game board", gameId)
 	board, err := models.LoadGameBoard(gameId)
