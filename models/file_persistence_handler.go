@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/telecoda/go-man/utils"
 	"io/ioutil"
+	"os"
 )
 
 type GameBoardPersistence interface {
@@ -62,4 +63,13 @@ func (p *Persister) Load(id string) (*GameBoard, error) {
 
 	fmt.Println("Loaded gameboard")
 	return &board, err
+}
+
+func (p *Persister) Destroy(id string) error {
+
+	fmt.Println("Destroying gameboard:", id)
+
+	filePath := utils.GetAbsolutePathOfCurrentPackage("../gamedata/" + id + ".json")
+
+	return os.Remove(filePath)
 }

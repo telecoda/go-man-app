@@ -50,6 +50,11 @@ func TestCreateGame(t *testing.T) {
 		log.Fatal("No gameboard.Id")
 	}
 
+	err = board.DestroyGameBoard()
+	if err != nil {
+		log.Fatal("DestroyGameBoard failed:", err)
+	}
+
 	fmt.Println("TestCreateGame ended")
 
 }

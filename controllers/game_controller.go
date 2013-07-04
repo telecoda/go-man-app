@@ -24,7 +24,7 @@ func GameCreate(w http.ResponseWriter, r *http.Request) {
 	log.Println("GameCreate started")
 	addResponseHeaders(w)
 
-	var board = newGameBoard()
+	var board = models.NewGameBoard()
 
 	board.SaveGameBoard()
 
@@ -53,6 +53,66 @@ func GameById(w http.ResponseWriter, r *http.Request) {
 func returnBoardAsJson(w http.ResponseWriter, board *models.GameBoard) {
 
 	json.NewEncoder(w).Encode(&board)
+
+}
+
+func returnPlayerAsJson(w http.ResponseWriter, player *models.Player) {
+
+	json.NewEncoder(w).Encode(&player)
+
+}
+
+// received MainPlayer as JSON request
+func AddPlayer(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("Add player started")
+	addResponseHeaders(w)
+
+	jsonBody, err := getRequestBody(r)
+	if err != nil {
+		http.Error(w, "Failed to get request body", http.StatusInternalServerError)
+		return
+	}
+
+	// unmarshall Player request
+	player, err := unmarshallPlayer(jsonBody)
+
+	if err != nil {
+		http.Error(w, "Failed to unmarshall player", http.StatusInternalServerError)
+		return
+	}
+
+	// fetch current board
+	vars := mux.Vars(r)
+	gameId := vars["gameId"]
+
+	fmt.Println("Getting game board", gameId)
+	board, err := models.LoadGameBoard(gameId)
+
+	if board == nil || err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	player, err = board.AddPlayer(player)
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("Save game board", gameId)
+	err = board.SaveGameBoard()
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	returnPlayerAsJson(w, player)
 
 }
 
