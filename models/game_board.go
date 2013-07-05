@@ -1,10 +1,8 @@
 package models
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/telecoda/go-man/utils"
-	"os"
 	"time"
 )
 
@@ -48,8 +46,6 @@ const BONUS = '$'
 
 // points
 const PILL_POINTS = 10
-
-var defaultBoard [][]rune
 
 var persister = NewFilePersister()
 
@@ -99,45 +95,12 @@ func (board *GameBoard) UpdatePillsRemaining() {
 
 }
 
-func initGameBoard() {
-
-	defaultBoard = make([][]rune, BOARD_HEIGHT)
-
-	// this path will be of the controllers package
-	filePath := utils.GetAbsolutePathOfCurrentPackage("../data/maze.txt")
-
-	f, err := os.Open(filePath)
-	if err != nil {
-		fmt.Printf("error opening file: %v\n", err)
-		os.Exit(1)
-	}
-	reader := bufio.NewReader(f)
-
-	var r int = 0
-	for {
-
-		b, err := reader.ReadBytes('\n')
-		if err == nil {
-			// parse line
-
-			b = b[:len(b)-1] // remove last new line char from bytes
-			row := string(b)
-			defaultBoard[r] = make([]rune, BOARD_WIDTH)
-			for c, cell := range row {
-				defaultBoard[r][c] = rune(cell)
-				c++
-			}
-			r++
-		} else {
-			break
-		}
-
-	}
-
-}
-
 func NewGameBoard() *GameBoard {
-	initGameBoard()
+	defaultBoard, err := initGameBoard()
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
 	gameBoard := new(GameBoard)
 
 	id, err := utils.GenUUID()
@@ -155,9 +118,6 @@ func NewGameBoard() *GameBoard {
 	gameBoard.MaxGoMenAllowed = MAX_GOMAN_PLAYERS
 	gameBoard.CreatedTime = time.Now()
 	gameBoard.UpdatePillsRemaining()
-
-	// init players
-	//gameBoard.MainPlayer = *newPlayer()
 
 	return gameBoard
 }
