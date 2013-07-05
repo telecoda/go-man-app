@@ -13,29 +13,28 @@ type Point struct {
 	X, Y int
 }
 
-type GameState int
+type GameState string
 
 const (
-	WaitingForPlayers GameState = iota
-	PlayingGame
-	MainPlayerDied
-	BoardClear
-	GameOver
+	WaitingForPlayers GameState = "waiting"
+	PlayingGame                 = "playing"
+	BoardClear                  = "clear"
+	GameOver                    = "over"
 )
 
-type PlayerType int
+type PlayerType string
 
 const (
-	GoMan PlayerType = iota
-	GoGhost
+	GoMan   PlayerType = "goman"
+	GoGhost            = "goghost"
 )
 
-type PlayerState int
+type PlayerState string
 
 const (
-	Alive PlayerState = iota
-	Dead
-	Spawing
+	Alive    PlayerState = "alive"
+	Dead                 = "dead"
+	Spawning             = "spawning"
 )
 
 type Player struct {

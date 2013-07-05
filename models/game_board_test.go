@@ -219,6 +219,34 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 
 }
 
+func TestAddPlayerFailsWithInvalidType(t *testing.T) {
+
+	fmt.Println("TestAddPlayerFailsWithInvalidType - started")
+
+	board := NewGameBoard()
+
+	if board == nil {
+		log.Fatal("NewGameBoard failed to create a gameBoard")
+	}
+
+	newPlayer := new(Player)
+	newPlayer.Name = "Joe"
+	newPlayer.Type = "invalid" // use a non valid constant
+
+	addedPlayer, err := board.AddPlayer(newPlayer)
+
+	if err == nil {
+		log.Fatal("Adding a player with an unknown type SHOULD return an error")
+	}
+
+	if addedPlayer != nil {
+		log.Fatal("Player should NOT have been added")
+	}
+
+	fmt.Println("TestAddPlayerFailsWithInvalidType - ended")
+
+}
+
 func TestIsMoveValidWorksWithValidXMove(t *testing.T) {
 
 	fmt.Println("TestIsMoveValidWorksWithValidXMove - started")
