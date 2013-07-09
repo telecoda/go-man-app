@@ -11,6 +11,12 @@ import (
 	"testing"
 )
 
+func Setup() {
+}
+
+func Teardown(t *testing.T) {
+}
+
 func TestCreateGame(t *testing.T) {
 
 	fmt.Println("TestCreateGame started")
@@ -25,11 +31,11 @@ func TestCreateGame(t *testing.T) {
 	jsonBody, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Failed to read JSON response", err.Error)
 	}
 
 	if jsonBody == nil {
-		log.Fatal("No json returned")
+		t.Errorf("No json returned")
 	}
 
 	var board models.GameBoard
@@ -37,22 +43,22 @@ func TestCreateGame(t *testing.T) {
 	err = json.Unmarshal(jsonBody, &board)
 
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Failed to unmarshal JSON response", err.Error)
 	}
 
 	// check values of board returned
 
 	if &board == nil {
-		log.Fatal("No game board")
+		t.Errorf("No game board")
 	}
 
 	if len(board.Id) == 0 {
-		log.Fatal("No gameboard.Id")
+		t.Errorf("No gameboard.Id")
 	}
 
 	err = board.DestroyGameBoard()
 	if err != nil {
-		log.Fatal("DestroyGameBoard failed:", err)
+		t.Errorf("DestroyGameBoard failed:", err)
 	}
 
 	fmt.Println("TestCreateGame ended")

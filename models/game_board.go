@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+/* Thanks to the following source for an ASCII version of the game board
+http://4coder.org/c-c-source-code/152/pacman/board.c.html
+*/
 type Point struct {
 	X, Y int
 }
@@ -34,6 +37,17 @@ type GameBoard struct {
 	BoardCells         [][]rune
 }
 
+type GameBoardSummary struct {
+	Id                 string
+	Name               string
+	Players            []Player
+	MaxGoMenAllowed    int
+	MaxGoGhostsAllowed int
+	State              GameState
+	CreatedTime        time.Time
+	LastUpdatedTime    time.Time
+}
+
 // dimensions
 const BOARD_WIDTH int = 28
 const BOARD_HEIGHT int = 24
@@ -56,6 +70,47 @@ func (board *GameBoard) SaveGameBoard() error {
 
 func LoadGameBoard(id string) (*GameBoard, error) {
 	return persister.Load(id)
+}
+
+func (board *GameBoard) convertToBoardSummary() *GameBoardSummary {
+
+	boardSummary := new(GameBoardSummary)
+
+	boardSummary.Id = board.Id
+	boardSummary.Name = board.Name
+	boardSummary.MaxGoGhostsAllowed = board.MaxGoGhostsAllowed
+	boardSummary.MaxGoMenAllowed = board.MaxGoMenAllowed
+	boardSummary.Players = board.Players
+	boardSummary.State = board.State
+	boardSummary.CreatedTime = board.CreatedTime
+	boardSummary.LastUpdatedTime = board.LastUpdatedTime
+
+	return boardSummary
+}
+
+func ReadAllGameBoards(filterByState string) (*[]GameBoardSummary, error) {
+
+	boards, err := persister.LoadAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("FilterByState:", filterByState)
+	var boardSummaries []GameBoardSummary
+	// convert boards to board summary
+	for _, board := range boards {
+		if filterByState != "" {
+			if string(board.State) == filterByState {
+
+				boardSummaries = append(boardSummaries, *board.convertToBoardSummary())
+			}
+
+		} else {
+			boardSummaries = append(boardSummaries, *board.convertToBoardSummary())
+		}
+	}
+	return &boardSummaries, nil
 }
 
 func (board *GameBoard) DestroyGameBoard() error {

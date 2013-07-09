@@ -9,14 +9,20 @@ import (
 	"net/http"
 )
 
-/* Thanks to the following source for an ASCII version of the game board
-http://4coder.org/c-c-source-code/152/pacman/board.c.html
-
-*/
-
 func GameList(w http.ResponseWriter, r *http.Request) {
 	addResponseHeaders(w)
-	fmt.Fprint(w, Response{"success": true, "message": "Here are the current games", "method": r.Method})
+
+	stateFilter := r.URL.Query().Get("state")
+	fmt.Println("Query parameters:", stateFilter)
+
+	// get all games
+	boards, err := models.ReadAllGameBoards(stateFilter)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	returnBoardsSummaryAsJson(w, boards)
+	//fmt.Fprint(w, Response{"success": true, "message": "Here are the current games", "method": r.Method})
 }
 
 func GameCreate(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +53,12 @@ func GameById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	returnBoardAsJson(w, board)
+
+}
+
+func returnBoardsSummaryAsJson(w http.ResponseWriter, boardsSummary *[]models.GameBoardSummary) {
+
+	json.NewEncoder(w).Encode(&boardsSummary)
 
 }
 
