@@ -34,6 +34,7 @@ type GameBoard struct {
 	State              GameState
 	CreatedTime        time.Time
 	LastUpdatedTime    time.Time
+	GameStartTime 		time.Time
 	BoardCells         [][]rune
 }
 
@@ -46,11 +47,14 @@ type GameBoardSummary struct {
 	State              GameState
 	CreatedTime        time.Time
 	LastUpdatedTime    time.Time
+	GameStartTime time.Time
 }
 
 // dimensions
 const BOARD_WIDTH int = 28
 const BOARD_HEIGHT int = 24
+
+const GAME_WAIT_SECONDS int = 10
 
 // cell types
 const WALL = '#'
@@ -84,6 +88,7 @@ func (board *GameBoard) convertToBoardSummary() *GameBoardSummary {
 	boardSummary.State = board.State
 	boardSummary.CreatedTime = board.CreatedTime
 	boardSummary.LastUpdatedTime = board.LastUpdatedTime
+	boardSummary.GameStartTime = board.GameStartTime
 
 	return boardSummary
 }
@@ -97,7 +102,10 @@ func ReadAllGameBoards(filterByState string) (*[]GameBoardSummary, error) {
 	}
 
 	fmt.Println("FilterByState:", filterByState)
-	var boardSummaries []GameBoardSummary
+
+	// at least return an empty list
+	var boardSummaries = make([]GameBoardSummary,0)
+
 	// convert boards to board summary
 	for _, board := range boards {
 		if filterByState != "" {
@@ -172,6 +180,7 @@ func NewGameBoard() *GameBoard {
 	gameBoard.MaxGoGhostsAllowed = MAX_GOMAN_GHOSTS
 	gameBoard.MaxGoMenAllowed = MAX_GOMAN_PLAYERS
 	gameBoard.CreatedTime = time.Now()
+	gameBoard.GameStartTime = gameBoard.CreatedTime.Add(time.Duration(GAME_WAIT_SECONDS) * time.Second)
 	gameBoard.UpdatePillsRemaining()
 
 	return gameBoard

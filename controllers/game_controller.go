@@ -21,6 +21,7 @@ func GameList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	
 	returnBoardsSummaryAsJson(w, boards)
 	//fmt.Fprint(w, Response{"success": true, "message": "Here are the current games", "method": r.Method})
 }
