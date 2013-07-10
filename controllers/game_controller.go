@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/telecoda/go-man/models"
 	"log"
+	"time"
 	"net/http"
 )
 
@@ -21,7 +22,7 @@ func GameList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	returnBoardsSummaryAsJson(w, boards)
 	//fmt.Fprint(w, Response{"success": true, "message": "Here are the current games", "method": r.Method})
 }
@@ -35,8 +36,23 @@ func GameCreate(w http.ResponseWriter, r *http.Request) {
 
 	board.SaveGameBoard()
 
+	// spawn process to wait for players
+	go waitForPlayers(board)
+
 	log.Println("GameCreate finshed")
 	returnBoardAsJson(w, board)
+}
+
+func waitForPlayers(board *models.GameBoard) {
+
+// process sleeps until its time to wake up
+fmt.Println("New game: I am going to sleep whilst I wait for players on game:", board.Id)
+fmt.Println("I will be asleep for ", models.GAME_WAIT_SECONDS , " seconds")
+
+time.Sleep(time.Duration(models.GAME_WAIT_SECONDS) * time.Second)
+
+fmt.Println("Yawn, I have awoken!")
+
 }
 
 func GameById(w http.ResponseWriter, r *http.Request) {
