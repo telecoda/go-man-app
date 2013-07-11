@@ -2,8 +2,11 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"github.com/telecoda/go-man/utils"
 	"math"
+	"strconv"
+	"time"
 )
 
 /* this file contains the player specific function */
@@ -34,6 +37,9 @@ type Player struct {
 
 const PLAYER_START_X = 13
 const PLAYER_START_Y = 14
+
+const GHOST_START_X = 13
+const GHOST_START_Y = 10
 
 const MAX_GOMAN_PLAYERS int = 1
 const MAX_GOMAN_GHOSTS int = 4
@@ -111,14 +117,11 @@ func (board *GameBoard) AddPlayer(newPlayer *Player) (*Player, error) {
 		return nil, errors.New("Invalid player type")
 	}
 
-	ghostCount := board.countGhosts()
-	goMenCount := board.countGoMen()
-
-	if newPlayer.Type == GoGhost && ghostCount >= MAX_GOMAN_GHOSTS {
+	if newPlayer.Type == GoGhost && board.getRemainingGoGhosts() <= 0 {
 		return nil, errors.New("Cannot add anymore ghosts to game")
 	}
 
-	if newPlayer.Type == GoMan && goMenCount >= MAX_GOMAN_PLAYERS {
+	if newPlayer.Type == GoMan && board.getRemainingGoMen() <= 0 {
 		return nil, errors.New("Cannot add anymore go-men to game")
 	}
 
@@ -127,7 +130,175 @@ func (board *GameBoard) AddPlayer(newPlayer *Player) (*Player, error) {
 	newPlayer.State = Alive
 	board.Players = append(board.Players, *newPlayer)
 
+	// if game is New this is first playing being added
+	if board.State == NewGame {
+
+		board.State = WaitingForPlayers
+		// spawn process to wait for players
+		go waitForPlayers(board.Id)
+
+	}
+
+	if board.getRemainingGoMen() == 0 &&
+		board.getRemainingGoGhosts() == 0 {
+		board.startGame()
+	}
+
 	return newPlayer, nil
+}
+
+func (board *GameBoard) getRemainingGoMen() int {
+	goMenCount := board.countGoMen()
+	return MAX_GOMAN_PLAYERS - goMenCount
+}
+
+func (board *GameBoard) getRemainingGoGhosts() int {
+	goGhostCount := board.countGhosts()
+	return MAX_GOMAN_GHOSTS - goGhostCount
+}
+
+func waitForPlayers(gameId string) {
+
+	// process sleeps until its time to wake up
+	fmt.Println("New game: I am going to sleep whilst I wait for players on game:", gameId)
+	fmt.Println("I will be asleep for ", GAME_WAIT_SECONDS, " seconds")
+
+	time.Sleep(time.Duration(GAME_WAIT_SECONDS) * time.Second)
+
+	fmt.Println("Yawn, I have awoken!")
+
+	board, err := LoadGameBoard(gameId)
+
+	if err != nil {
+		// silently failed game may have already ended
+		fmt.Println("Error loading board:", err)
+		return
+	}
+
+	if board == nil {
+		// silently failed game may have already ended
+		fmt.Println("Error: board is empty:")
+		return
+	}
+
+	board.PopulateRemainingPlayers()
+
+}
+
+func (board *GameBoard) PopulateRemainingPlayers() {
+	// this method is called after wait time has completed
+	// its responsibility is to add any CPU controlled players
+	// if necessary & then start the game
+
+	if board.State != WaitingForPlayers {
+		fmt.Println("Game no longer waiting for players, aborting")
+		return
+	}
+
+	totalGoMen := board.countGoMen()
+
+	totalGhosts := board.countGhosts()
+
+	missingGoMen := MAX_GOMAN_PLAYERS - totalGoMen
+
+	for i := 0; i < missingGoMen; i++ {
+		board.addCPUGoMan(i)
+	}
+
+	missingGhosts := MAX_GOMAN_GHOSTS - totalGhosts
+
+	for i := 0; i < missingGhosts; i++ {
+		board.addCPUGhost(i)
+	}
+
+	board.SaveGameBoard()
+}
+
+func (board *GameBoard) addCPUGoMan(cpuId int) {
+
+	fmt.Println("Adding goMan:", strconv.Itoa(cpuId))
+	newCPUPlayer := new(Player)
+	newCPUPlayer.Name = "CPU-GOMAN-" + strconv.Itoa(cpuId)
+	newCPUPlayer.Type = GoMan
+	newCPUPlayer.Location.X = PLAYER_START_X
+	newCPUPlayer.Location.Y = PLAYER_START_Y
+	newCPUPlayer.cpuControlled = true
+	board.AddPlayer(newCPUPlayer)
+
+	fmt.Println("Added new GoMan:", newCPUPlayer.Name)
+}
+
+func (board *GameBoard) addCPUGhost(cpuId int) {
+
+	fmt.Println("Adding goGhost:", strconv.Itoa(cpuId))
+	newCPUPlayer := new(Player)
+	newCPUPlayer.Name = "CPU-GOGHOST-" + strconv.Itoa(cpuId)
+	newCPUPlayer.Type = GoGhost
+	newCPUPlayer.Location.X = GHOST_START_X
+	newCPUPlayer.Location.Y = GHOST_START_Y
+	newCPUPlayer.cpuControlled = true
+	board.AddPlayer(newCPUPlayer)
+
+	fmt.Println("Added new GoGhost:", newCPUPlayer.Name)
+}
+
+func (board *GameBoard) startGame() {
+
+	board.State = PlayingGame
+
+	// submit go processes for each CPU controlled player
+	for _, player := range board.Players {
+		if player.cpuControlled {
+
+			go playAsCPU(board.Id, player.Id)
+		}
+	}
+}
+
+func playAsCPU(gameId string, playerId string) {
+
+	/* this function will repeat until the current game ends */
+
+	var gamePlaying = true
+
+	for gamePlaying {
+
+		// wait for 1/60 of a second
+		timer := time.NewTimer(time.Second / 60)
+		<-timer.C
+
+		// get current board state
+		board, err := LoadGameBoard(gameId)
+
+		if err != nil {
+			fmt.Println("Error retrieving game, aborting.", err)
+			return
+		}
+
+		player := board.getPlayerFromServer(playerId)
+
+		if player == nil {
+			fmt.Println("Error player not found in game")
+			return
+		}
+
+		player = board.planBestMoveForPlayer(player)
+
+		err = board.MovePlayer(player)
+
+		if err != nil {
+			fmt.Println("Error moving player, aborting.", err)
+			return
+		}
+
+	}
+
+}
+
+func (board *GameBoard) planBestMoveForPlayer(player *Player) *Player {
+
+	// don't move at all
+	return player
 }
 
 func (board *GameBoard) countGhosts() int {

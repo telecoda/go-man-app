@@ -16,7 +16,8 @@ type Point struct {
 type GameState string
 
 const (
-	WaitingForPlayers GameState = "waiting"
+	NewGame GameState = "new"
+	WaitingForPlayers  = "waiting"
 	PlayingGame                 = "playing"
 	BoardClear                  = "clear"
 	GameOver                    = "over"
@@ -54,7 +55,7 @@ type GameBoardSummary struct {
 const BOARD_WIDTH int = 28
 const BOARD_HEIGHT int = 24
 
-const GAME_WAIT_SECONDS int = 10
+const GAME_WAIT_SECONDS int = 200
 
 // cell types
 const WALL = '#'
@@ -176,7 +177,7 @@ func NewGameBoard() *GameBoard {
 	gameBoard.Score = 0
 	gameBoard.Lives = 3
 	gameBoard.BoardCells = defaultBoard
-	gameBoard.State = WaitingForPlayers
+	gameBoard.State = NewGame
 	gameBoard.MaxGoGhostsAllowed = MAX_GOMAN_GHOSTS
 	gameBoard.MaxGoMenAllowed = MAX_GOMAN_PLAYERS
 	gameBoard.CreatedTime = time.Now()
