@@ -55,7 +55,7 @@ type GameBoardSummary struct {
 const BOARD_WIDTH int = 28
 const BOARD_HEIGHT int = 24
 
-const GAME_WAIT_SECONDS int = 200
+const GAME_WAIT_SECONDS int = 10
 
 // cell types
 const WALL = '#'
