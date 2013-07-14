@@ -21,9 +21,9 @@ func TestCreateBoard(t *testing.T) {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
 	}
 
-	// new board should be at state waiting for players
-	if board.State != WaitingForPlayers {
-		t.Errorf("A new game board should start as waiting for players")
+	// new board should be at state NewGame
+	if board.State != NewGame {
+		t.Errorf("A new game board should start at state NewGame")
 	}
 
 	// check player count
@@ -63,7 +63,7 @@ func TestAddGoManPlayerWorksWithValidBoard(t *testing.T) {
 	addedPlayer, err := board.AddPlayer(newPlayer)
 
 	if err != nil {
-		t.Errorf("Error adding player to board:",err.Error)
+		t.Errorf("Error adding player to board:", err.Error)
 	}
 
 	if addedPlayer == nil {
@@ -150,7 +150,7 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 	addedGhost1, err := board.AddPlayer(newGhost1)
 
 	if err != nil {
-		t.Errorf("Error adding player to board:",err.Error)
+		t.Errorf("Error adding player to board:", err.Error)
 	}
 
 	if addedGhost1 == nil {

@@ -1,5 +1,4 @@
-go-man
-======
+#go-man
 
 Pacman type game built as a RESTful API using go-lang
 
@@ -14,3 +13,10 @@ This project is my first venture into using go.
 Inspired by the idea of https://speakerdeck.com/christkv/mongoman-a-nodejs-powered-pacman-clone I saw demoed at
 
 2012 MongoDB conference in London.
+
+##Running all the tests
+
+The project contains a number of unit and functional test which can be run with follow command
+
+    go test github.com/telecoda/go-man/...
+
