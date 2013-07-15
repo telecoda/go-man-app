@@ -23,7 +23,6 @@ func GameList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	returnBoardsSummaryAsJson(w, boards)
-	//fmt.Fprint(w, Response{"success": true, "message": "Here are the current games", "method": r.Method})
 }
 
 func GameCreate(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +37,6 @@ func GameCreate(w http.ResponseWriter, r *http.Request) {
 	log.Println("GameCreate finshed")
 	returnBoardAsJson(w, board)
 }
-
-
 
 func GameById(w http.ResponseWriter, r *http.Request) {
 
@@ -85,7 +82,7 @@ func AddPlayer(w http.ResponseWriter, r *http.Request) {
 
 	jsonBody, err := getRequestBody(r)
 	if err != nil {
-		http.Error(w, "Failed to get request body", http.StatusInternalServerError)
+		http.Error(w, "Failed to get request body", http.StatusBadRequest)
 		return
 	}
 
@@ -93,7 +90,7 @@ func AddPlayer(w http.ResponseWriter, r *http.Request) {
 	player, err := unmarshallPlayer(jsonBody)
 
 	if err != nil {
-		http.Error(w, "Failed to unmarshall player", http.StatusInternalServerError)
+		http.Error(w, "Failed to unmarshall player"+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -108,7 +105,6 @@ func AddPlayer(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-
 
 	player, err = board.AddPlayer(player)
 
@@ -189,10 +185,10 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 func unmarshallPlayer(jsonBody []byte) (*models.Player, error) {
 
-	var mainPlayer models.Player
+	var player models.Player
 
-	err := json.Unmarshal(jsonBody, &mainPlayer)
+	err := json.Unmarshal(jsonBody, &player)
 
-	return &mainPlayer, err
+	return &player, err
 
 }

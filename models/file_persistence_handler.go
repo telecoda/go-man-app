@@ -53,7 +53,7 @@ func (p *Persister) Load(id string) (*GameBoard, error) {
 
 	bJson, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		fmt.Println("Error saving file", err)
+		fmt.Println("Error loading file", err)
 		return nil, err
 	}
 
