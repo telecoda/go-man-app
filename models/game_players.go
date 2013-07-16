@@ -125,7 +125,13 @@ func (board *GameBoard) AddPlayer(newPlayer *Player) (*Player, error) {
 		return nil, errors.New("Cannot add anymore go-men to game")
 	}
 
-	newPlayer.Location = Point{PLAYER_START_X, PLAYER_START_Y}
+	if newPlayer.Type == GoMan {
+		newPlayer.Location = Point{PLAYER_START_X, PLAYER_START_Y}
+
+	} else {
+		// its a ghost
+		newPlayer.Location = Point{GHOST_START_X, GHOST_START_Y}
+	}
 	newPlayer.Id, _ = utils.GenUUID()
 	newPlayer.State = Alive
 	board.Players = append(board.Players, *newPlayer)

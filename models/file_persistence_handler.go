@@ -47,8 +47,6 @@ func (p *Persister) Save(board *GameBoard) (err error) {
 
 func (p *Persister) Load(id string) (*GameBoard, error) {
 
-	fmt.Println("Loading gameboard:", id)
-
 	filePath := utils.GetAbsolutePathOfCurrentPackage("../gamedata/" + id + ".json")
 
 	bJson, err := ioutil.ReadFile(filePath)
@@ -63,7 +61,6 @@ func (p *Persister) Load(id string) (*GameBoard, error) {
 
 	err = json.Unmarshal(bJson, &board)
 
-	fmt.Println("Loaded gameboard")
 	return &board, err
 }
 
