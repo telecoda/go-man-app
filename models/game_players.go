@@ -46,6 +46,7 @@ const MAX_GOMAN_GHOSTS int = 4
 
 func (board *GameBoard) MovePlayer(player *Player) error {
 
+	fmt.Println("Move player coords:", player.Location.X, player.Location.Y)
 	// only allow moves when game playing
 	if board.State != PlayingGame {
 		return errors.New("Not ready, please wait")
@@ -53,6 +54,8 @@ func (board *GameBoard) MovePlayer(player *Player) error {
 
 	// check if player belongs to this game
 	playerServerState := board.getPlayerFromServer(player.Id)
+
+	fmt.Println("Current player coords:", playerServerState.Location.X, playerServerState.Location.Y)
 	if playerServerState == nil {
 		return errors.New("You are not a player in this game.")
 	}
@@ -74,6 +77,11 @@ func (board *GameBoard) MovePlayer(player *Player) error {
 
 	// update board with player
 	playerServerState.Location = player.Location
+
+	// get updated player to check if changed
+	playerServerState = board.getPlayerFromServer(player.Id)
+
+	fmt.Println("Moved player coords:", playerServerState.Location.X, playerServerState.Location.Y)
 
 	return nil
 }
@@ -256,7 +264,7 @@ func (board *GameBoard) startGame() {
 	for _, player := range board.Players {
 		if player.cpuControlled {
 
-			go playAsCPU(board.Id, player.Id)
+			//RSB TEMP remove go playAsCPU(board.Id, player.Id)
 		}
 	}
 }

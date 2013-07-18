@@ -22,7 +22,7 @@ func main() {
 	r.HandleFunc("/games/{gameId}", controllers.GameById).Methods("GET")
 	// add new player to game
 	r.HandleFunc("/games/{gameId}/players", controllers.AddPlayer).Methods("POST")
-	// update MainPlayer
+	// update player
 	r.HandleFunc("/games/{gameId}/players/{playerId}", controllers.UpdatePlayer).Methods("PUT")
 
 	// options

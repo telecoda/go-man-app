@@ -320,3 +320,77 @@ func TestIsMoveValidFailsWithInvalidXYMove(t *testing.T) {
 	fmt.Println("TestIsMoveValidFailsWithInvalidXYMove - ended")
 
 }
+
+func TestMovePlayerWithValidMoveWorks(t *testing.T) {
+
+	setup()
+	defer tearDown()
+
+	fmt.Println("TestMovePlayerWithValidMoveWorks started")
+
+	gameId := "game_at_playing_state"
+	playerId := "goman_player"
+
+	// fetch board
+	board, err := LoadGameBoard(gameId)
+
+	if err != nil {
+		t.Errorf("Error fetching game:", err.Error)
+	}
+
+	if board == nil {
+		t.Errorf("Error: GameBoard not returned")
+	}
+
+	player := board.getPlayerFromServer(playerId)
+
+	if player == nil {
+		t.Errorf("Player not found in game")
+	}
+
+	// move player right
+
+	player.Location.X++
+
+	board.MovePlayer(player)
+	// move player
+	if err != nil {
+		t.Errorf("Error moving player on board:", err.Error)
+	}
+
+	// fetch moved player from board
+	movedPlayer := board.getPlayerFromServer(playerId)
+
+	if movedPlayer == nil {
+		t.Errorf("Moved Player not found in game")
+	}
+
+	// check player has actually moved
+	if (movedPlayer.Location.X != player.Location.X) || (movedPlayer.Location.Y != player.Location.Y) {
+		t.Errorf("Player has not moved")
+	}
+
+	fmt.Println("TestMovePlayerWithValidMoveWorks ended")
+
+}
+
+/* helper functions */
+
+func setup() {
+	fmt.Println("Test setup")
+	deleteAllGames()
+	copyGameFixtures()
+}
+
+func tearDown() {
+	fmt.Println("Test teardown")
+	deleteAllGames()
+}
+
+func deleteAllGames() {
+	utils.DeleteOldGameBoardFiles()
+}
+
+func copyGameFixtures() {
+	utils.CopyGameDataFixtures("gamedata_fixtures", "gamedata")
+}

@@ -99,8 +99,8 @@ func TestGameList(t *testing.T) {
 
 	// check values of boards returned
 
-	if len(boards) != 3 {
-		t.Errorf("There should be 3 boards but we received %d", len(boards))
+	if len(boards) != 2 {
+		t.Errorf("There should be 2 boards but we received %d", len(boards))
 	}
 
 	if &boards == nil {
@@ -149,8 +149,8 @@ func TestGameListFilteredByState(t *testing.T) {
 
 	// check values of boards returned
 
-	if len(boards) != 2 {
-		t.Errorf("There should be 2 boards but we received %d", len(boards))
+	if len(boards) != 1{
+		t.Errorf("There should be 1 boards but we received %d", len(boards))
 	}
 
 	if &boards == nil {
@@ -160,6 +160,7 @@ func TestGameListFilteredByState(t *testing.T) {
 	fmt.Println("TestGameListFilteredByState ended")
 
 }
+
 /* helper functions */
 
 func setup() {

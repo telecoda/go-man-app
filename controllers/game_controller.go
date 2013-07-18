@@ -136,14 +136,16 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 	jsonBody, err := getRequestBody(r)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to get request body", http.StatusInternalServerError)
 		return
 	}
 
 	// unmarshall Player request
-	mainPlayer, err := unmarshallPlayer(jsonBody)
+	player, err := unmarshallPlayer(jsonBody)
 
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to unmarshall player", http.StatusInternalServerError)
 		return
 	}
@@ -156,12 +158,19 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Getting game board", gameId)
 	board, err := models.LoadGameBoard(gameId)
 
-	if board == nil || err != nil {
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if board == nil {
+		fmt.Println("Board not found:" , gameId)
 		http.NotFound(w, r)
 		return
 	}
 
-	err = board.MovePlayer(mainPlayer)
+	
+	err = board.MovePlayer(player)
 
 	if err != nil {
 		fmt.Println(err)
