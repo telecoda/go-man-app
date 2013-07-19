@@ -169,8 +169,8 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
-	err = board.MovePlayer(player)
+
+	err = board.MovePlayer(*player)
 
 	if err != nil {
 		fmt.Println(err)

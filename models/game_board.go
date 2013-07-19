@@ -127,19 +127,19 @@ func (board *GameBoard) DestroyGameBoard() error {
 	return persister.Destroy(board.Id)
 }
 
-func (board *GameBoard) eatPillAtLocation(location *Point) {
+func (board *GameBoard) eatPillAtLocation(location Point) {
 	board.Score += PILL_POINTS
 	board.PillsRemaining--
 	board.ClearCellAtLocation(location)
 }
 
-func (board *GameBoard) GetCellAtLocation(checkLocation *Point) rune {
+func (board *GameBoard) GetCellAtLocation(checkLocation Point) rune {
 
 	return board.BoardCells[checkLocation.Y][checkLocation.X]
 
 }
 
-func (board *GameBoard) ClearCellAtLocation(checkLocation *Point) {
+func (board *GameBoard) ClearCellAtLocation(checkLocation Point) {
 
 	board.BoardCells[checkLocation.Y][checkLocation.X] = ' '
 

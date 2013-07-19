@@ -44,7 +44,7 @@ const GHOST_START_Y = 10
 const MAX_GOMAN_PLAYERS int = 1
 const MAX_GOMAN_GHOSTS int = 4
 
-func (board *GameBoard) MovePlayer(player *Player) error {
+func (board *GameBoard) MovePlayer(player Player) error {
 
 	fmt.Println("Move player coords:", player.Location.X, player.Location.Y)
 	// only allow moves when game playing
@@ -56,27 +56,39 @@ func (board *GameBoard) MovePlayer(player *Player) error {
 	playerServerState := board.getPlayerFromServer(player.Id)
 
 	fmt.Println("Current player coords:", playerServerState.Location.X, playerServerState.Location.Y)
-	if playerServerState == nil {
+	if &playerServerState == nil {
 		return errors.New("You are not a player in this game.")
 	}
 
 	// check move is valid
-	if !isMoveValid(&playerServerState.Location, &player.Location) {
+	if !isMoveValid(playerServerState.Location, player.Location) {
 		return errors.New("Cheat, invalid move")
 	}
 
-	cell := board.GetCellAtLocation(&player.Location)
+	cell := board.GetCellAtLocation(player.Location)
 
 	switch cell {
 	case WALL:
 		return errors.New("Invalid move, you can't walk through walls")
 	case PILL:
-		board.eatPillAtLocation(&player.Location)
+		board.eatPillAtLocation(player.Location)
 		break
 	}
 
-	// update board with player
-	playerServerState.Location = player.Location
+	fmt.Println("Before")
+	fmt.Println("player address:", &player)
+	fmt.Println("playerServerState address:", playerServerState)
+	fmt.Println("players:", board.Players)
+
+	// update board with player's location
+	playerServerState.Location.X = player.Location.X
+	playerServerState.Location.Y = player.Location.Y
+
+	//board.Players[0].Location.X = 99
+	fmt.Println("After")
+	fmt.Println("player address:", &player)
+	fmt.Println("playerServerState address:", playerServerState)
+	fmt.Println("players:", board.Players)
 
 	// get updated player to check if changed
 	playerServerState = board.getPlayerFromServer(player.Id)
@@ -88,16 +100,21 @@ func (board *GameBoard) MovePlayer(player *Player) error {
 
 func (board *GameBoard) getPlayerFromServer(playerId string) *Player {
 
-	for _, player := range board.Players {
+	// using a range to iterate through an array of objects
+	// works on a copy of the object not a reference
+	// to the object...!!
+	for i, player := range board.Players {
 		if player.Id == playerId {
-			return &player
+			//return &player <-- returned a pointer to a copy
+			// return reference tot he realobject
+			return &board.Players[i]
 		}
 	}
 
 	return nil
 }
 
-func isMoveValid(existingLocation *Point, newLocation *Point) bool {
+func isMoveValid(existingLocation Point, newLocation Point) bool {
 
 	// player can only move in one direction at a time
 	// player can only move one cell at a time
@@ -291,25 +308,25 @@ func playAsCPU(gameId string, playerId string) {
 
 		player := board.getPlayerFromServer(playerId)
 
-		if player == nil {
+		if &player == nil {
 			fmt.Println("Error player not found in game")
 			return
 		}
 
-		player = board.planBestMoveForPlayer(player)
+		/*movedPlayer := board.planBestMoveForPlayer(player)
 
-		err = board.MovePlayer(player)
+		err = board.MovePlayer(movedPlayer)
 
 		if err != nil {
 			fmt.Println("Error moving player, aborting.", err)
 			return
 		}
-
+		*/
 	}
 
 }
 
-func (board *GameBoard) planBestMoveForPlayer(player *Player) *Player {
+func (board *GameBoard) planBestMoveForPlayer(player Player) Player {
 
 	// don't move at all
 	return player
