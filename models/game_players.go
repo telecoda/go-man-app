@@ -55,7 +55,6 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	// check if player belongs to this game
 	playerServerState := board.getPlayerFromServer(player.Id)
 
-	fmt.Println("Current player coords:", playerServerState.Location.X, playerServerState.Location.Y)
 	if &playerServerState == nil {
 		return errors.New("You are not a player in this game.")
 	}
@@ -75,25 +74,14 @@ func (board *GameBoard) MovePlayer(player Player) error {
 		break
 	}
 
-	fmt.Println("Before")
-	fmt.Println("player address:", &player)
-	fmt.Println("playerServerState address:", playerServerState)
-	fmt.Println("players:", board.Players)
-
 	// update board with player's location
 	playerServerState.Location.X = player.Location.X
 	playerServerState.Location.Y = player.Location.Y
 
 	//board.Players[0].Location.X = 99
-	fmt.Println("After")
-	fmt.Println("player address:", &player)
-	fmt.Println("playerServerState address:", playerServerState)
-	fmt.Println("players:", board.Players)
 
 	// get updated player to check if changed
 	playerServerState = board.getPlayerFromServer(player.Id)
-
-	fmt.Println("Moved player coords:", playerServerState.Location.X, playerServerState.Location.Y)
 
 	return nil
 }

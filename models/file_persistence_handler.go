@@ -33,6 +33,7 @@ func (p *Persister) Save(board *GameBoard) (err error) {
 	// convert to JSON for saving to file (binary would be quicker...)
 	bJson, err := json.Marshal(board)
 
+	//err = ioutil.WriteFile(filePath, bJson, os.FileMode.ModeExclusive)
 	err = ioutil.WriteFile(filePath, bJson, 0600)
 
 	if err != nil {

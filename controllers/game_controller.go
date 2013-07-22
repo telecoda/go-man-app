@@ -48,6 +48,7 @@ func GameById(w http.ResponseWriter, r *http.Request) {
 	board, err := models.LoadGameBoard(gameId)
 
 	if err != nil {
+		fmt.Println(err)
 		http.NotFound(w, r)
 		return
 	}
