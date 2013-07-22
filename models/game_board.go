@@ -55,6 +55,8 @@ type GameBoardSummary struct {
 const BOARD_WIDTH int = 28
 const BOARD_HEIGHT int = 24
 
+const INITIAL_GAMES_HOSTED = 10
+
 const GAME_WAIT_SECONDS int = 10
 
 // cell types
@@ -66,15 +68,20 @@ const BONUS = '$'
 // points
 const PILL_POINTS = 10
 
-var persister = NewFilePersister()
+var GamePersister = InMemoryPersister()
+
+func (board *GameBoard) CreateGameBoard() error {
+	return GamePersister.Create(board)
+}
+
 
 func (board *GameBoard) SaveGameBoard() error {
 	board.LastUpdatedTime = time.Now()
-	return persister.Save(board)
+	return GamePersister.Update(board)
 }
 
 func LoadGameBoard(id string) (*GameBoard, error) {
-	return persister.Load(id)
+	return GamePersister.Read(id)
 }
 
 func (board *GameBoard) convertToBoardSummary() *GameBoardSummary {
@@ -96,7 +103,7 @@ func (board *GameBoard) convertToBoardSummary() *GameBoardSummary {
 
 func ReadAllGameBoards(filterByState string) (*[]GameBoardSummary, error) {
 
-	boards, err := persister.LoadAll()
+	boards, err := GamePersister.ReadAll()
 
 	if err != nil {
 		return nil, err
@@ -124,7 +131,7 @@ func ReadAllGameBoards(filterByState string) (*[]GameBoardSummary, error) {
 
 func (board *GameBoard) DestroyGameBoard() error {
 	fmt.Println("Destroying gameBoard:", board.Id)
-	return persister.Destroy(board.Id)
+	return GamePersister.Delete(board.Id)
 }
 
 func (board *GameBoard) eatPillAtLocation(location Point) {

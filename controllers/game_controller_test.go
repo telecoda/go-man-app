@@ -4,12 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/telecoda/go-man/models"
-	"github.com/telecoda/go-man/utils"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+var playingBoardId string
+var playingBoardPlayerId string
+
+var waitingBoardId string
+var waitingBoardPlayerId string
 
 
 func TestCreateGame(t *testing.T) {
@@ -161,12 +166,12 @@ func TestGameListFilteredByState(t *testing.T) {
 
 }
 
-/* helper functions */
 
 func setup() {
 	fmt.Println("Test setup")
-	deleteAllGames()
-	copyGameFixtures()
+	models.GamePersister.DeleteAll()
+
+	addTestGames()
 }
 
 func tearDown() {
@@ -175,10 +180,34 @@ func tearDown() {
 }
 
 func deleteAllGames() {
-	utils.DeleteOldGameBoardFiles()
+	// delete all the games in the games persister
+	models.GamePersister.DeleteAll()
 }
 
-func copyGameFixtures() {
-	utils.CopyGameDataFixtures("gamedata_fixtures", "gamedata")
+func addTestGames() {
+	// create board at playing state
+	var playingBoard = models.NewGameBoard()
+	playingBoardId = playingBoard.Id
+	playingBoard.State = models.PlayingGame
+	// add player
+	newPlayer := &models.Player{Name: "Player", Type: models.GoMan}
+	addedPlayer, err := playingBoard.AddPlayer(newPlayer)
+
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	playingBoardPlayerId = addedPlayer.Id
+
+	models.GamePersister.Create(playingBoard)
+
+	// create board at waiting state
+	var waitingBoard = models.NewGameBoard()
+	waitingBoardId = waitingBoard.Id
+	waitingBoard.State = models.WaitingForPlayers
+	models.GamePersister.Create(waitingBoard)
+
 }
+
 
