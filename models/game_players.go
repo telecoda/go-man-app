@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/telecoda/go-man/utils"
 	"math"
+	"math/rand"
 	"strconv"
 	"time"
 )
@@ -49,7 +50,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	fmt.Println("Move player coords:", player.Location.X, player.Location.Y)
 	// only allow moves when game playing
 	if board.State != PlayingGame {
-		return errors.New("Not ready, please wait")
+		return errors.New("Not playing, you cannot move now")
 	}
 
 	// check if player belongs to this game
@@ -64,21 +65,46 @@ func (board *GameBoard) MovePlayer(player Player) error {
 		return errors.New("Cheat, invalid move")
 	}
 
+	// check for wrap around to other side of board
+	if player.Location.X < 0 {
+		fmt.Println("Player wrap left")
+		player.Location.X = (BOARD_WIDTH - 1)
+	}
+
+	if player.Location.X >= BOARD_WIDTH {
+		fmt.Println("Player wrap right")
+		player.Location.X = 0
+	}
+
 	cell := board.GetCellAtLocation(player.Location)
 
 	switch cell {
 	case WALL:
 		return errors.New("Invalid move, you can't walk through walls")
 	case PILL:
-		board.eatPillAtLocation(player.Location)
+		if player.Type == GoMan {
+			board.eatPillAtLocation(player.Location)
+			board.UpdatePillsRemaining()
+			if board.PillsRemaining == 0 {
+				board.gameWon()
+			}
+		}
 		break
+	case POWER_PILL:
+		if player.Type == GoMan {
+			board.eatPowerPillAtLocation(player.Location)
+			board.UpdatePillsRemaining()
+			if board.PillsRemaining == 0 {
+				board.gameWon()
+			}
+		}
+		break
+
 	}
 
 	// update board with player's location
 	playerServerState.Location.X = player.Location.X
 	playerServerState.Location.Y = player.Location.Y
-
-	//board.Players[0].Location.X = 99
 
 	// get updated player to check if changed
 	playerServerState = board.getPlayerFromServer(player.Id)
@@ -264,14 +290,20 @@ func (board *GameBoard) addCPUGhost(cpuId int) {
 func (board *GameBoard) startGame() {
 
 	board.State = PlayingGame
+	board.PowerPillActive = false
 
 	// submit go processes for each CPU controlled player
 	for _, player := range board.Players {
 		if player.cpuControlled {
 
-			//RSB TEMP remove go playAsCPU(board.Id, player.Id)
+			go playAsCPU(board.Id, player.Id)
 		}
 	}
+}
+
+func (board *GameBoard) gameWon() {
+
+	board.State = GameWon
 }
 
 func playAsCPU(gameId string, playerId string) {
@@ -294,6 +326,10 @@ func playAsCPU(gameId string, playerId string) {
 			return
 		}
 
+		if board.State == GameWon {
+			// stop playing game is won
+		}
+
 		player := board.getPlayerFromServer(playerId)
 
 		if &player == nil {
@@ -301,25 +337,89 @@ func playAsCPU(gameId string, playerId string) {
 			return
 		}
 
-		/*movedPlayer := board.planBestMoveForPlayer(player)
+		movedPlayer := board.planBestMoveForPlayer(*player)
 
 		err = board.MovePlayer(movedPlayer)
 
 		if err != nil {
-			fmt.Println("Error moving player, aborting.", err)
-			return
+			fmt.Println("Error moving player, carry on", err)
 		}
-		*/
+
 	}
 
 }
 
 func (board *GameBoard) planBestMoveForPlayer(player Player) Player {
 
-	// don't move at all
+	if player.Type == GoMan {
+		// plan best goman move
+		if board.PowerPillActive {
+			// chase ghost
+			player = board.goManChasesGhosts(player)
+		} else {
+			// avoid ghosts
+			player = board.goManAvoidsGhosts(player)
+		}
+	} else {
+		// plan best ghost mode
+		if board.PowerPillActive {
+			// avoid goman
+			player = board.ghostAvoidsGoman(player)
+		} else {
+			// chase goman
+			player = board.ghostChasesGoman(player)
+		}
+	}
 	return player
 }
 
+func (board *GameBoard) goManChasesGhosts(player Player) Player {
+	// do a random move for now
+	player.Location.X++
+
+	return player
+}
+
+func (board *GameBoard) goManAvoidsGhosts(player Player) Player {
+	// do a random move for now
+	player.Location.X++
+
+	return player
+}
+
+func (board *GameBoard) ghostChasesGoman(player Player) Player {
+	// do some random moves for now
+
+	whichWay := rand.Int() % 4
+	fmt.Println("direction", whichWay, player.Name)
+	switch whichWay {
+	// left
+	case 0:
+		player.Location.X--
+		break
+	// right
+	case 1:
+		player.Location.X++
+		break
+	// up
+	case 2:
+		player.Location.Y--
+		break
+	// down
+	case 3:
+		player.Location.Y++
+		break
+	}
+
+	return player
+}
+
+func (board *GameBoard) ghostAvoidsGoman(player Player) Player {
+	// do a random move for now
+	player.Location.X++
+
+	return player
+}
 func (board *GameBoard) countGhosts() int {
 	totalGhosts := 0
 	for _, player := range board.Players {

@@ -19,7 +19,7 @@ const (
 	NewGame GameState = "new"
 	WaitingForPlayers  = "waiting"
 	PlayingGame                 = "playing"
-	BoardClear                  = "clear"
+	GameWon                  = "won"
 	GameOver                    = "over"
 )
 
@@ -33,6 +33,7 @@ type GameBoard struct {
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
 	State              GameState
+	PowerPillActive    bool
 	CreatedTime        time.Time
 	LastUpdatedTime    time.Time
 	GameStartTime 		time.Time
@@ -136,6 +137,14 @@ func (board *GameBoard) DestroyGameBoard() error {
 
 func (board *GameBoard) eatPillAtLocation(location Point) {
 	board.Score += PILL_POINTS
+	board.PillsRemaining--
+	board.ClearCellAtLocation(location)
+}
+
+func (board *GameBoard) eatPowerPillAtLocation(location Point) {
+	board.Score += PILL_POINTS
+	board.PowerPillActive = true
+	// start power pill timer...
 	board.PillsRemaining--
 	board.ClearCellAtLocation(location)
 }
