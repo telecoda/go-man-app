@@ -117,6 +117,8 @@ func (board *GameBoard) getPlayerFromServer(playerId string) *Player {
 	// using a range to iterate through an array of objects
 	// works on a copy of the object not a reference
 	// to the object...!!
+
+	// TODO this should really be a map, doh!
 	for i, player := range board.Players {
 		if player.Id == playerId {
 			//return &player <-- returned a pointer to a copy
@@ -315,7 +317,10 @@ func playAsCPU(gameId string, playerId string) {
 	for gamePlaying {
 
 		// wait for 1/60 of a second
-		timer := time.NewTimer(time.Second / 60)
+		//timer := time.NewTimer(time.Second / 60)
+
+		// slow down enemy to 1/4 a move
+		timer := time.NewTimer(time.Second / 4)
 		<-timer.C
 
 		// get current board state
@@ -374,22 +379,31 @@ func (board *GameBoard) planBestMoveForPlayer(player Player) Player {
 }
 
 func (board *GameBoard) goManChasesGhosts(player Player) Player {
-	// do a random move for now
-	player.Location.X++
 
-	return player
+	return board.randomMovement(player)
+
 }
 
 func (board *GameBoard) goManAvoidsGhosts(player Player) Player {
-	// do a random move for now
-	player.Location.X++
 
-	return player
+	return board.randomMovement(player)
+
 }
 
 func (board *GameBoard) ghostChasesGoman(player Player) Player {
-	// do some random moves for now
 
+	return board.randomMovement(player)
+
+}
+
+func (board *GameBoard) ghostAvoidsGoman(player Player) Player {
+
+	return board.randomMovement(player)
+
+}
+
+func (board *GameBoard) randomMovement(player Player) Player {
+	// do some random moves for now
 	whichWay := rand.Int() % 4
 	fmt.Println("direction", whichWay, player.Name)
 	switch whichWay {
@@ -414,12 +428,6 @@ func (board *GameBoard) ghostChasesGoman(player Player) Player {
 	return player
 }
 
-func (board *GameBoard) ghostAvoidsGoman(player Player) Player {
-	// do a random move for now
-	player.Location.X++
-
-	return player
-}
 func (board *GameBoard) countGhosts() int {
 	totalGhosts := 0
 	for _, player := range board.Players {
