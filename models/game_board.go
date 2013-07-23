@@ -29,7 +29,7 @@ type GameBoard struct {
 	PillsRemaining     int
 	Score              int
 	Lives              int
-	Players            []Player
+	Players            map[string]*Player
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
 	State              GameState
@@ -43,7 +43,7 @@ type GameBoard struct {
 type GameBoardSummary struct {
 	Id                 string
 	Name               string
-	Players            []Player
+	Players            map[string]*Player
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
 	State              GameState
@@ -196,6 +196,7 @@ func NewGameBoard() *GameBoard {
 	gameBoard.State = NewGame
 	gameBoard.MaxGoGhostsAllowed = MAX_GOMAN_GHOSTS
 	gameBoard.MaxGoMenAllowed = MAX_GOMAN_PLAYERS
+	gameBoard.Players = make(map[string]*Player)
 	gameBoard.CreatedTime = time.Now()
 	gameBoard.GameStartTime = gameBoard.CreatedTime.Add(time.Duration(GAME_WAIT_SECONDS) * time.Second)
 	gameBoard.UpdatePillsRemaining()

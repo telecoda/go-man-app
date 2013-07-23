@@ -106,10 +106,22 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	playerServerState.Location.X = player.Location.X
 	playerServerState.Location.Y = player.Location.Y
 
+	// check for player collisions
+	if board.checkPlayerCollisions(player) {
+		fmt.Println("player hit another player")
+	}
+
 	// get updated player to check if changed
 	playerServerState = board.getPlayerFromServer(player.Id)
 
 	return nil
+}
+
+func (board *GameBoard) checkPlayerCollisions(player Player) bool {
+
+	// check if a player has collided with another player
+	return false
+
 }
 
 func (board *GameBoard) getPlayerFromServer(playerId string) *Player {
@@ -118,16 +130,8 @@ func (board *GameBoard) getPlayerFromServer(playerId string) *Player {
 	// works on a copy of the object not a reference
 	// to the object...!!
 
-	// TODO this should really be a map, doh!
-	for i, player := range board.Players {
-		if player.Id == playerId {
-			//return &player <-- returned a pointer to a copy
-			// return reference tot he realobject
-			return &board.Players[i]
-		}
-	}
+	return board.Players[playerId]
 
-	return nil
 }
 
 func isMoveValid(existingLocation Point, newLocation Point) bool {
@@ -175,7 +179,8 @@ func (board *GameBoard) AddPlayer(newPlayer *Player) (*Player, error) {
 	}
 	newPlayer.Id, _ = utils.GenUUID()
 	newPlayer.State = Alive
-	board.Players = append(board.Players, *newPlayer)
+	//board.Players = append(board.Players, *newPlayer)
+	board.Players[newPlayer.Id] = newPlayer
 
 	// if game is New this is first playing being added
 	if board.State == NewGame {
