@@ -58,7 +58,7 @@ const BOARD_HEIGHT int = 24
 
 const INITIAL_GAMES_HOSTED = 10
 
-const GAME_WAIT_SECONDS int = 10
+const GAME_WAIT_SECONDS int = 60
 
 // cell types
 const WALL = '#'
