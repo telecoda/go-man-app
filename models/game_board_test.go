@@ -2,14 +2,11 @@ package models
 
 import (
 	"fmt"
-	"github.com/telecoda/go-man/utils"
 	"testing"
 )
 
-func init() {
-	// delete all previous games
-	utils.DeleteOldGameBoardFiles()
-}
+var playingBoardId string
+var playingBoardPlayerId string
 
 func TestCreateBoard(t *testing.T) {
 
@@ -19,27 +16,32 @@ func TestCreateBoard(t *testing.T) {
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
+		return
 	}
 
 	// new board should be at state NewGame
 	if board.State != NewGame {
 		t.Errorf("A new game board should start at state NewGame")
+		return
 	}
 
 	// check player count
 	if board.MaxGoMenAllowed != MAX_GOMAN_PLAYERS {
 		t.Errorf("Max goman players not correct")
+		return
 	}
 
 	// check ghost count
 	if board.MaxGoGhostsAllowed != MAX_GOMAN_GHOSTS {
 		t.Errorf("Max goman ghosts not correct")
+		return
 	}
 
 	err := board.SaveGameBoard()
 
 	if err != nil {
 		t.Errorf("SaveGameBoard failed:", err)
+		return
 	}
 
 	fmt.Println("TestCreateBoard ended")
@@ -54,6 +56,7 @@ func TestAddGoManPlayerWorksWithValidBoard(t *testing.T) {
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
+		return
 	}
 
 	newPlayer := new(Player)
@@ -64,26 +67,32 @@ func TestAddGoManPlayerWorksWithValidBoard(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Error adding player to board:", err.Error)
+		return
 	}
 
 	if addedPlayer == nil {
 		t.Errorf("Failed to add player to game")
+		return
 	}
 
 	if addedPlayer.Id == "" {
 		t.Errorf("Added player does not have id")
+		return
 	}
 
 	if addedPlayer.Name != "Rob" {
 		t.Errorf("Player has wrong name")
+		return
 	}
 
 	if addedPlayer.Type != GoMan {
 		t.Errorf("Player has wrong type")
+		return
 	}
 
 	if len(board.Players) != 1 {
 		t.Errorf("Board should have 1 player")
+		return
 	}
 
 	fmt.Println("TestAddGoManPlayerWorksWithValidBoard ended")
@@ -98,6 +107,7 @@ func TestAddGoManPlayerFailsIfTooManyGoMen(t *testing.T) {
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
+		return
 	}
 
 	newPlayer1 := new(Player)
@@ -108,10 +118,12 @@ func TestAddGoManPlayerFailsIfTooManyGoMen(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Error adding player to board:", err.Error)
+		return
 	}
 
 	if addedPlayer1 == nil {
 		t.Errorf("Failed to add player to game")
+		return
 	}
 
 	newPlayer2 := new(Player)
@@ -123,10 +135,12 @@ func TestAddGoManPlayerFailsIfTooManyGoMen(t *testing.T) {
 	fmt.Println("Error expected, here it is:", err)
 	if err == nil {
 		t.Errorf("Adding a second GoMan player SHOULD cause an error")
+		return
 	}
 
 	if addedPlayer2 != nil {
 		t.Errorf("Second GoMan player should NOT be added")
+		return
 	}
 
 	fmt.Println("TestAddGoManPlayerFailsIfTooManyGoMen - ended")
@@ -141,6 +155,7 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
+		return
 	}
 
 	newGhost1 := new(Player)
@@ -151,10 +166,12 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Error adding player to board:", err.Error)
+		return
 	}
 
 	if addedGhost1 == nil {
 		t.Errorf("Failed to add ghost to game")
+		return
 	}
 
 	newGhost2 := new(Player)
@@ -165,10 +182,12 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Error adding player to board:", err.Error)
+		return
 	}
 
 	if addedGhost2 == nil {
 		t.Errorf("Failed to add ghost to game")
+		return
 	}
 
 	newGhost3 := new(Player)
@@ -179,10 +198,12 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Error adding player to board:", err.Error)
+		return
 	}
 
 	if addedGhost3 == nil {
 		t.Errorf("Failed to add ghost to game")
+		return
 	}
 
 	newGhost4 := new(Player)
@@ -193,10 +214,12 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Error adding player to board:", err.Error)
+		return
 	}
 
 	if addedGhost4 == nil {
 		t.Errorf("Failed to add ghost to game")
+		return
 	}
 
 	newGhost5 := new(Player)
@@ -208,10 +231,12 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 	fmt.Println("Error expected, here it is:", err)
 	if err == nil {
 		t.Errorf("Adding a fifth GoGhost player SHOULD cause an error")
+		return
 	}
 
 	if addedGhost5 != nil {
 		t.Errorf("Fifth GoGhost player should NOT be added")
+		return
 	}
 
 	fmt.Println("TestAddGoGhostFailsIfTooManyGoGhosts - ended")
@@ -226,6 +251,7 @@ func TestAddPlayerFailsWithInvalidType(t *testing.T) {
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
+		return
 	}
 
 	newPlayer := new(Player)
@@ -236,10 +262,12 @@ func TestAddPlayerFailsWithInvalidType(t *testing.T) {
 
 	if err == nil {
 		t.Errorf("Adding a player with an unknown type SHOULD return an error")
+		return
 	}
 
 	if addedPlayer != nil {
 		t.Errorf("Player should NOT have been added")
+		return
 	}
 
 	fmt.Println("TestAddPlayerFailsWithInvalidType - ended")
@@ -255,6 +283,7 @@ func TestIsMoveValidWorksWithValidXMove(t *testing.T) {
 
 	if !isMoveValid(existingLocation, newLocation) {
 		t.Errorf("isMoveValid should allow this move")
+		return
 	}
 
 	fmt.Println("TestIsMoveValidWorksWithValidXMove - ended")
@@ -270,6 +299,7 @@ func TestIsMoveValidFailsWithInvalidXMove(t *testing.T) {
 
 	if isMoveValid(existingLocation, newLocation) {
 		t.Errorf("isMoveValid should NOT allow this move")
+		return
 	}
 
 	fmt.Println("TestIsMoveValidFailsWithInvalidXMove - ended")
@@ -285,6 +315,7 @@ func TestIsMoveValidWorksWithValidYMove(t *testing.T) {
 
 	if !isMoveValid(existingLocation, newLocation) {
 		t.Errorf("isMoveValid should allow this move")
+		return
 	}
 
 	fmt.Println("TestIsMoveValidWorksWithValidYMove - ended")
@@ -300,6 +331,7 @@ func TestIsMoveValidFailsWithInvalidYMove(t *testing.T) {
 
 	if isMoveValid(existingLocation, newLocation) {
 		t.Errorf("isMoveValid should NOT allow this move")
+		return
 	}
 
 	fmt.Println("TestIsMoveValidFailsWithInvalidYMove - ended")
@@ -315,6 +347,7 @@ func TestIsMoveValidFailsWithInvalidXYMove(t *testing.T) {
 
 	if isMoveValid(existingLocation, newLocation) {
 		t.Errorf("isMoveValid should NOT allow this move")
+		return
 	}
 
 	fmt.Println("TestIsMoveValidFailsWithInvalidXYMove - ended")
@@ -328,24 +361,27 @@ func TestMovePlayerWithValidMoveWorks(t *testing.T) {
 
 	fmt.Println("TestMovePlayerWithValidMoveWorks started")
 
-	gameId := "game_at_playing_state"
-	playerId := "goman_player"
+	gameId := playingBoardId
+	playerId := playingBoardPlayerId
 
 	// fetch board
 	board, err := LoadGameBoard(gameId)
 
 	if err != nil {
 		t.Errorf("Error fetching game:", err.Error)
+		return
 	}
 
 	if board == nil {
 		t.Errorf("Error: GameBoard not returned")
+		return
 	}
 
 	player := board.getPlayerFromServer(playerId)
 
 	if player == nil {
 		t.Errorf("Player not found in game")
+		return
 	}
 
 	// move player right
@@ -356,6 +392,7 @@ func TestMovePlayerWithValidMoveWorks(t *testing.T) {
 	// move player
 	if err != nil {
 		t.Errorf("Error moving player on board:", err.Error)
+		return
 	}
 
 	// fetch moved player from board
@@ -363,11 +400,13 @@ func TestMovePlayerWithValidMoveWorks(t *testing.T) {
 
 	if movedPlayer == nil {
 		t.Errorf("Moved Player not found in game")
+		return
 	}
 
 	// check player has actually moved
 	if (movedPlayer.Location.X != player.Location.X) || (movedPlayer.Location.Y != player.Location.Y) {
 		t.Errorf("Player has not moved")
+		return
 	}
 
 	fmt.Println("TestMovePlayerWithValidMoveWorks ended")
@@ -378,8 +417,9 @@ func TestMovePlayerWithValidMoveWorks(t *testing.T) {
 
 func setup() {
 	fmt.Println("Test setup")
-	deleteAllGames()
-	copyGameFixtures()
+	GamePersister.DeleteAll()
+
+	addTestGames()
 }
 
 func tearDown() {
@@ -388,9 +428,31 @@ func tearDown() {
 }
 
 func deleteAllGames() {
-	utils.DeleteOldGameBoardFiles()
+	// delete all the games in the games Persister
+	GamePersister.DeleteAll()
 }
 
-func copyGameFixtures() {
-	utils.CopyGameDataFixtures("gamedata_fixtures", "gamedata")
+func addTestGames() {
+	// create board at playing state
+	var playingBoard = NewGameBoard()
+	playingBoardId = playingBoard.Id
+	playingBoard.State = PlayingGame
+	// add player
+	newPlayer := &Player{Name: "Player", Type: GoMan}
+	addedPlayer, err := playingBoard.AddPlayer(newPlayer)
+
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	playingBoardPlayerId = addedPlayer.Id
+
+	// create board at waiting state
+	GamePersister.Create(playingBoard)
+	var board2 = NewGameBoard()
+	GamePersister.Create(board2)
+	var board3 = NewGameBoard()
+	GamePersister.Create(board3)
+
 }

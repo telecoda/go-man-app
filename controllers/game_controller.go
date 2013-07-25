@@ -32,7 +32,7 @@ func GameCreate(w http.ResponseWriter, r *http.Request) {
 
 	var board = models.NewGameBoard()
 
-	board.SaveGameBoard()
+	board.CreateGameBoard()
 
 	log.Println("GameCreate finshed")
 	returnBoardAsJson(w, board)

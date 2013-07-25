@@ -19,7 +19,7 @@ const (
 	NewGame GameState = "new"
 	WaitingForPlayers  = "waiting"
 	PlayingGame                 = "playing"
-	BoardClear                  = "clear"
+	GameWon                  = "won"
 	GameOver                    = "over"
 )
 
@@ -29,10 +29,11 @@ type GameBoard struct {
 	PillsRemaining     int
 	Score              int
 	Lives              int
-	Players            []Player
+	Players            map[string]*Player
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
 	State              GameState
+	PowerPillActive    bool
 	CreatedTime        time.Time
 	LastUpdatedTime    time.Time
 	GameStartTime 		time.Time
@@ -42,7 +43,7 @@ type GameBoard struct {
 type GameBoardSummary struct {
 	Id                 string
 	Name               string
-	Players            []Player
+	Players            map[string]*Player
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
 	State              GameState
@@ -55,7 +56,9 @@ type GameBoardSummary struct {
 const BOARD_WIDTH int = 28
 const BOARD_HEIGHT int = 24
 
-const GAME_WAIT_SECONDS int = 10
+const INITIAL_GAMES_HOSTED = 10
+
+const GAME_WAIT_SECONDS int = 60
 
 // cell types
 const WALL = '#'
@@ -66,15 +69,20 @@ const BONUS = '$'
 // points
 const PILL_POINTS = 10
 
-var persister = NewFilePersister()
+var GamePersister = InMemoryPersister()
+
+func (board *GameBoard) CreateGameBoard() error {
+	return GamePersister.Create(board)
+}
+
 
 func (board *GameBoard) SaveGameBoard() error {
 	board.LastUpdatedTime = time.Now()
-	return persister.Save(board)
+	return GamePersister.Update(board)
 }
 
 func LoadGameBoard(id string) (*GameBoard, error) {
-	return persister.Load(id)
+	return GamePersister.Read(id)
 }
 
 func (board *GameBoard) convertToBoardSummary() *GameBoardSummary {
@@ -96,7 +104,7 @@ func (board *GameBoard) convertToBoardSummary() *GameBoardSummary {
 
 func ReadAllGameBoards(filterByState string) (*[]GameBoardSummary, error) {
 
-	boards, err := persister.LoadAll()
+	boards, err := GamePersister.ReadAll()
 
 	if err != nil {
 		return nil, err
@@ -124,11 +132,19 @@ func ReadAllGameBoards(filterByState string) (*[]GameBoardSummary, error) {
 
 func (board *GameBoard) DestroyGameBoard() error {
 	fmt.Println("Destroying gameBoard:", board.Id)
-	return persister.Destroy(board.Id)
+	return GamePersister.Delete(board.Id)
 }
 
 func (board *GameBoard) eatPillAtLocation(location Point) {
 	board.Score += PILL_POINTS
+	board.PillsRemaining--
+	board.ClearCellAtLocation(location)
+}
+
+func (board *GameBoard) eatPowerPillAtLocation(location Point) {
+	board.Score += PILL_POINTS
+	board.PowerPillActive = true
+	// start power pill timer...
 	board.PillsRemaining--
 	board.ClearCellAtLocation(location)
 }
@@ -180,6 +196,7 @@ func NewGameBoard() *GameBoard {
 	gameBoard.State = NewGame
 	gameBoard.MaxGoGhostsAllowed = MAX_GOMAN_GHOSTS
 	gameBoard.MaxGoMenAllowed = MAX_GOMAN_PLAYERS
+	gameBoard.Players = make(map[string]*Player)
 	gameBoard.CreatedTime = time.Now()
 	gameBoard.GameStartTime = gameBoard.CreatedTime.Add(time.Duration(GAME_WAIT_SECONDS) * time.Second)
 	gameBoard.UpdatePillsRemaining()
