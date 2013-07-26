@@ -34,6 +34,8 @@ type Player struct {
 	State         PlayerState
 	Name          string
 	cpuControlled bool
+	Score         int
+	Lives         int
 }
 
 const PLAYER_START_X = 13
@@ -47,7 +49,6 @@ const MAX_GOMAN_GHOSTS int = 4
 
 func (board *GameBoard) MovePlayer(player Player) error {
 
-	fmt.Println("Move player coords:", player.Location.X, player.Location.Y)
 	// only allow moves when game playing
 	if board.State != PlayingGame {
 		return errors.New("Not playing, you cannot move now")
@@ -84,6 +85,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	case PILL:
 		if player.Type == GoMan {
 			board.eatPillAtLocation(player.Location)
+			player.Score += PILL_POINTS
 			board.UpdatePillsRemaining()
 			if board.PillsRemaining == 0 {
 				board.gameWon()
@@ -93,6 +95,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	case POWER_PILL:
 		if player.Type == GoMan {
 			board.eatPowerPillAtLocation(player.Location)
+			player.Score += POWER_PILL_POINTS
 			board.UpdatePillsRemaining()
 			if board.PillsRemaining == 0 {
 				board.gameWon()
@@ -107,9 +110,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	playerServerState.Location.Y = player.Location.Y
 
 	// check for player collisions
-	if board.checkPlayerCollisions(player) {
-		fmt.Println("player hit another player")
-	}
+	board.checkPlayerCollisions(player)
 
 	// get updated player to check if changed
 	playerServerState = board.getPlayerFromServer(player.Id)
@@ -117,13 +118,31 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	return nil
 }
 
-func (board *GameBoard) checkPlayerCollisions(player Player) bool {
+func (board *GameBoard) checkPlayerCollisions(currentPlayer Player) {
 
 	// check if a player has collided with another player
-	return false
+	for _, player := range board.Players {
+		// if not same player
+		// and not same type of player
+		// and they are both alive
+		if player.Id != currentPlayer.Id &&
+			player.Type != currentPlayer.Type &&
+			player.State == Alive &&
+			currentPlayer.State == Alive {
+			// check co-ords
+			if player.Location.X == currentPlayer.Location.X &&
+				player.Location.Y == currentPlayer.Location.Y {
+				board.playersCollided(&currentPlayer, player)
+			}
+		}
+	}
+	return
 
 }
 
+func (board *GameBoard) playersCollided(player1 *Player, player2 *Player) {
+	fmt.Println("Player:", player1.Name, " hit Player:", player2.Name)
+}
 func (board *GameBoard) getPlayerFromServer(playerId string) *Player {
 
 	// using a range to iterate through an array of objects
@@ -179,6 +198,10 @@ func (board *GameBoard) AddPlayer(newPlayer *Player) (*Player, error) {
 	}
 	newPlayer.Id, _ = utils.GenUUID()
 	newPlayer.State = Alive
+	newPlayer.Score = 0
+	newPlayer.Lives = 3
+	newPlayer.State = Alive
+
 	//board.Players = append(board.Players, *newPlayer)
 	board.Players[newPlayer.Id] = newPlayer
 
@@ -410,7 +433,7 @@ func (board *GameBoard) ghostAvoidsGoman(player Player) Player {
 func (board *GameBoard) randomMovement(player Player) Player {
 	// do some random moves for now
 	whichWay := rand.Int() % 4
-	fmt.Println("direction", whichWay, player.Name)
+
 	switch whichWay {
 	// left
 	case 0:

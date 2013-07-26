@@ -27,8 +27,6 @@ type GameBoard struct {
 	Id                 string
 	Name               string
 	PillsRemaining     int
-	Score              int
-	Lives              int
 	Players            map[string]*Player
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
@@ -58,7 +56,7 @@ const BOARD_HEIGHT int = 24
 
 const INITIAL_GAMES_HOSTED = 10
 
-const GAME_WAIT_SECONDS int = 60
+const GAME_WAIT_SECONDS int = 10
 
 // cell types
 const WALL = '#'
@@ -68,6 +66,7 @@ const BONUS = '$'
 
 // points
 const PILL_POINTS = 10
+const POWER_PILL_POINTS = 50
 
 var GamePersister = InMemoryPersister()
 
@@ -136,13 +135,11 @@ func (board *GameBoard) DestroyGameBoard() error {
 }
 
 func (board *GameBoard) eatPillAtLocation(location Point) {
-	board.Score += PILL_POINTS
 	board.PillsRemaining--
 	board.ClearCellAtLocation(location)
 }
 
 func (board *GameBoard) eatPowerPillAtLocation(location Point) {
-	board.Score += PILL_POINTS
 	board.PowerPillActive = true
 	// start power pill timer...
 	board.PillsRemaining--
@@ -190,8 +187,6 @@ func NewGameBoard() *GameBoard {
 	}
 	gameBoard.Id = id
 	gameBoard.Name = "Init name"
-	gameBoard.Score = 0
-	gameBoard.Lives = 3
 	gameBoard.BoardCells = defaultBoard
 	gameBoard.State = NewGame
 	gameBoard.MaxGoGhostsAllowed = MAX_GOMAN_GHOSTS
