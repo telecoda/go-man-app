@@ -141,8 +141,39 @@ func (board *GameBoard) checkPlayerCollisions(currentPlayer Player) {
 }
 
 func (board *GameBoard) playersCollided(player1 *Player, player2 *Player) {
+
 	fmt.Println("Player:", player1.Name, " hit Player:", player2.Name)
+
+	if board.PowerPillActive {
+		fmt.Println("powerpill active")
+		// if powerpill active ghost will die
+		if player1.Type == GoMan {
+			board.ghostDeath(player2)
+		} else {
+			board.ghostDeath(player1)
+		}
+
+	} else {
+		fmt.Println("powerpill not active")
+		// if powerpill not active goman will die
+		if player1.Type == GoGhost {
+			board.gomanDeath(player2)
+		} else {
+			board.gomanDeath(player1)
+		}
+
+	}
+
 }
+
+func (board *GameBoard) gomanDeath(goman *Player) {
+	fmt.Println(goman.Name, " died")
+}
+
+func (board *GameBoard) ghostDeath(goGhost *Player) {
+	fmt.Println(goGhost.Name, " died")
+}
+
 func (board *GameBoard) getPlayerFromServer(playerId string) *Player {
 
 	// using a range to iterate through an array of objects
