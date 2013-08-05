@@ -16,10 +16,10 @@ type Point struct {
 type GameState string
 
 const (
-	NewGame GameState = "new"
-	WaitingForPlayers  = "waiting"
+	NewGame           GameState = "new"
+	WaitingForPlayers           = "waiting"
 	PlayingGame                 = "playing"
-	GameWon                  = "won"
+	GameWon                     = "won"
 	GameOver                    = "over"
 )
 
@@ -31,10 +31,10 @@ type GameBoard struct {
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
 	State              GameState
-	PowerPillActive    bool
+	PowerPillsActive   int
 	CreatedTime        time.Time
 	LastUpdatedTime    time.Time
-	GameStartTime 		time.Time
+	GameStartTime      time.Time
 	BoardCells         [][]rune
 }
 
@@ -47,7 +47,7 @@ type GameBoardSummary struct {
 	State              GameState
 	CreatedTime        time.Time
 	LastUpdatedTime    time.Time
-	GameStartTime time.Time
+	GameStartTime      time.Time
 }
 
 // dimensions
@@ -67,13 +67,13 @@ const BONUS = '$'
 // points
 const PILL_POINTS = 10
 const POWER_PILL_POINTS = 50
+const POWER_PILL_WAIT_SECONDS = 5
 
 var GamePersister = InMemoryPersister()
 
 func (board *GameBoard) CreateGameBoard() error {
 	return GamePersister.Create(board)
 }
-
 
 func (board *GameBoard) SaveGameBoard() error {
 	board.LastUpdatedTime = time.Now()
@@ -112,7 +112,7 @@ func ReadAllGameBoards(filterByState string) (*[]GameBoardSummary, error) {
 	fmt.Println("FilterByState:", filterByState)
 
 	// at least return an empty list
-	var boardSummaries = make([]GameBoardSummary,0)
+	var boardSummaries = make([]GameBoardSummary, 0)
 
 	// convert boards to board summary
 	for _, board := range boards {
@@ -140,10 +140,22 @@ func (board *GameBoard) eatPillAtLocation(location Point) {
 }
 
 func (board *GameBoard) eatPowerPillAtLocation(location Point) {
-	board.PowerPillActive = true
+	go board.activatePowerPill()
 	// start power pill timer...
 	board.PillsRemaining--
 	board.ClearCellAtLocation(location)
+}
+
+func (board *GameBoard) activatePowerPill() {
+	// increment active powerpill count
+	// this is to gracefully cope with multiple activations
+	board.PowerPillsActive++
+
+	// wait till end of pill
+	time.Sleep(time.Duration(POWER_PILL_WAIT_SECONDS) * time.Second)
+
+	board.PowerPillsActive--
+
 }
 
 func (board *GameBoard) GetCellAtLocation(checkLocation Point) rune {

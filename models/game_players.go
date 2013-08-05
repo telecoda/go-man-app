@@ -154,7 +154,7 @@ func (board *GameBoard) playersCollided(player1 *Player, player2 *Player) {
 
 	fmt.Println("Player:", player1.Name, " hit Player:", player2.Name)
 
-	if board.PowerPillActive {
+	if board.PowerPillsActive > 0 {
 		fmt.Println("powerpill active")
 		// if powerpill active ghost will die
 		if player1.Type == GoMan {
@@ -416,7 +416,7 @@ func (board *GameBoard) addCPUGhost(cpuId int) {
 func (board *GameBoard) startGame() {
 
 	board.State = PlayingGame
-	board.PowerPillActive = false
+	board.PowerPillsActive = 0
 
 	// submit go processes for each CPU controlled player
 	for _, player := range board.Players {
@@ -488,7 +488,7 @@ func (board *GameBoard) planBestMoveForPlayer(player Player) Player {
 
 	if player.Type == GoMan {
 		// plan best goman move
-		if board.PowerPillActive {
+		if board.PowerPillsActive > 0 {
 			// chase ghost
 			player = board.goManChasesGhosts(player)
 		} else {
@@ -497,7 +497,7 @@ func (board *GameBoard) planBestMoveForPlayer(player Player) Player {
 		}
 	} else {
 		// plan best ghost mode
-		if board.PowerPillActive {
+		if board.PowerPillsActive > 0 {
 			// avoid goman
 			player = board.ghostAvoidsGoman(player)
 		} else {
