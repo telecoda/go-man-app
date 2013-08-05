@@ -23,6 +23,7 @@ type PlayerState string
 
 const (
 	Alive    PlayerState = "alive"
+	Dying                = "dying"
 	Dead                 = "dead"
 	Spawning             = "spawning"
 )
@@ -47,6 +48,10 @@ const GHOST_START_Y = 10
 const MAX_GOMAN_PLAYERS int = 1
 const MAX_GOMAN_GHOSTS int = 4
 
+const DEATH_WAIT_SECONDS = 3
+const KILLED_GHOST_POINTS = 100
+const KILLED_GOMAN_POINTS = 100
+
 func (board *GameBoard) MovePlayer(player Player) error {
 
 	// only allow moves when game playing
@@ -59,6 +64,11 @@ func (board *GameBoard) MovePlayer(player Player) error {
 
 	if &playerServerState == nil {
 		return errors.New("You are not a player in this game.")
+	}
+
+	// check player is alive
+	if playerServerState.State != Alive {
+		return errors.New("You are not alive so cannot move.")
 	}
 
 	// check move is valid
@@ -85,7 +95,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	case PILL:
 		if player.Type == GoMan {
 			board.eatPillAtLocation(player.Location)
-			player.Score += PILL_POINTS
+			playerServerState.Score += PILL_POINTS
 			board.UpdatePillsRemaining()
 			if board.PillsRemaining == 0 {
 				board.gameWon()
@@ -95,7 +105,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	case POWER_PILL:
 		if player.Type == GoMan {
 			board.eatPowerPillAtLocation(player.Location)
-			player.Score += POWER_PILL_POINTS
+			playerServerState.Score += POWER_PILL_POINTS
 			board.UpdatePillsRemaining()
 			if board.PillsRemaining == 0 {
 				board.gameWon()
@@ -110,7 +120,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	playerServerState.Location.Y = player.Location.Y
 
 	// check for player collisions
-	board.checkPlayerCollisions(player)
+	board.checkPlayerCollisions(*playerServerState)
 
 	// get updated player to check if changed
 	playerServerState = board.getPlayerFromServer(player.Id)
@@ -148,18 +158,29 @@ func (board *GameBoard) playersCollided(player1 *Player, player2 *Player) {
 		fmt.Println("powerpill active")
 		// if powerpill active ghost will die
 		if player1.Type == GoMan {
-			board.ghostDeath(player2)
+			go board.ghostDeath(player2)
+
+			player1.Score += KILLED_GHOST_POINTS
+
 		} else {
-			board.ghostDeath(player1)
+			go board.ghostDeath(player1)
+
+			player2.Score += KILLED_GHOST_POINTS
+
 		}
 
 	} else {
 		fmt.Println("powerpill not active")
 		// if powerpill not active goman will die
 		if player1.Type == GoGhost {
-			board.gomanDeath(player2)
+			go board.gomanDeath(player2)
+
+			player1.Score += KILLED_GOMAN_POINTS
+
 		} else {
-			board.gomanDeath(player1)
+			go board.gomanDeath(player1)
+
+			player2.Score += KILLED_GOMAN_POINTS
 		}
 
 	}
@@ -167,11 +188,55 @@ func (board *GameBoard) playersCollided(player1 *Player, player2 *Player) {
 }
 
 func (board *GameBoard) gomanDeath(goman *Player) {
-	fmt.Println(goman.Name, " died")
+	fmt.Println(goman.Name, " dying")
+	goman.State = Dying
+
+	time.Sleep(time.Duration(DEATH_WAIT_SECONDS) * time.Second)
+
+	if goman.Lives > 0 {
+		// lose a life
+		goman.Lives--
+		board.respawnGoMan(goman)
+
+	} else {
+		// dead for good
+		goman.State = Dead
+
+		liveGoMen := board.countLiveGoMen()
+
+		if liveGoMen == 0 {
+			// game over
+			board.State = GameOver
+		}
+	}
+
 }
 
 func (board *GameBoard) ghostDeath(goGhost *Player) {
-	fmt.Println(goGhost.Name, " died")
+	fmt.Println(goGhost.Name, " dying")
+	goGhost.State = Dying
+
+	time.Sleep(time.Duration(DEATH_WAIT_SECONDS) * time.Second)
+
+	// ghosts have unlimited lives, just spawn them again
+	// and again, until all gomen are dead
+	board.respawnGhost(goGhost)
+}
+
+func (board *GameBoard) respawnGoMan(goMan *Player) {
+
+	fmt.Println(goMan.Name, " back to life")
+	goMan.State = Alive
+	goMan.Location = Point{PLAYER_START_X, PLAYER_START_Y}
+
+}
+
+func (board *GameBoard) respawnGhost(goGhost *Player) {
+
+	fmt.Println(goGhost.Name, " back to life")
+	goGhost.State = Alive
+	goGhost.Location = Point{GHOST_START_X, GHOST_START_Y}
+
 }
 
 func (board *GameBoard) getPlayerFromServer(playerId string) *Player {
@@ -392,6 +457,12 @@ func playAsCPU(gameId string, playerId string) {
 
 		if board.State == GameWon {
 			// stop playing game is won
+			return
+		}
+
+		if board.State == GameOver {
+			// stop playing game is over
+			return
 		}
 
 		player := board.getPlayerFromServer(playerId)
@@ -502,6 +573,17 @@ func (board *GameBoard) countGoMen() int {
 	totalGoMen := 0
 	for _, player := range board.Players {
 		if player.Type == GoMan {
+			totalGoMen++
+		}
+	}
+
+	return totalGoMen
+}
+
+func (board *GameBoard) countLiveGoMen() int {
+	totalGoMen := 0
+	for _, player := range board.Players {
+		if player.Type == GoMan && player.State != Dead {
 			totalGoMen++
 		}
 	}
