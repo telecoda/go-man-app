@@ -45,8 +45,8 @@ const PLAYER_START_Y = 14
 const GHOST_START_X = 13
 const GHOST_START_Y = 10
 
-const MAX_GOMAN_PLAYERS int = 1
-const MAX_GOMAN_GHOSTS int = 4
+//const MAX_GOMAN_PLAYERS int = 1
+//const MAX_GOMAN_GHOSTS int = 4
 
 const DEATH_WAIT_SECONDS = 3
 const KILLED_GHOST_POINTS = 100
@@ -130,8 +130,8 @@ func (board *GameBoard) MovePlayer(player Player) error {
 
 func (board *GameBoard) checkPlayerCollisions(currentPlayer Player) {
 
-	// check if a player has collided with another player
-	for _, player := range board.Players {
+	for id, _ := range board.Players {
+		player := board.Players[id]
 		// if not same player
 		// and not same type of player
 		// and they are both alive
@@ -320,23 +320,15 @@ func (board *GameBoard) AddPlayer(newPlayer *Player) (*Player, error) {
 
 func (board *GameBoard) getRemainingGoMen() int {
 	goMenCount := board.countGoMen()
-	return MAX_GOMAN_PLAYERS - goMenCount
+	return board.MaxGoMenAllowed - goMenCount
 }
 
 func (board *GameBoard) getRemainingGoGhosts() int {
 	goGhostCount := board.countGhosts()
-	return MAX_GOMAN_GHOSTS - goGhostCount
+	return board.MaxGoGhostsAllowed - goGhostCount
 }
 
 func waitForPlayers(gameId string) {
-
-	// process sleeps until its time to wake up
-	fmt.Println("New game: I am going to sleep whilst I wait for players on game:", gameId)
-	fmt.Println("I will be asleep for ", GAME_WAIT_SECONDS, " seconds")
-
-	time.Sleep(time.Duration(GAME_WAIT_SECONDS) * time.Second)
-
-	fmt.Println("Yawn, I have awoken!")
 
 	board, err := LoadGameBoard(gameId)
 
@@ -351,6 +343,14 @@ func waitForPlayers(gameId string) {
 		fmt.Println("Error: board is empty:")
 		return
 	}
+
+	// process sleeps until its time to wake up
+	fmt.Println("New game: I am going to sleep whilst I wait for players on game:", gameId)
+	fmt.Println("I will be asleep for ", board.WaitForPlayersSeconds, " seconds")
+
+	time.Sleep(time.Duration(board.WaitForPlayersSeconds) * time.Second)
+
+	fmt.Println("Yawn, I have awoken!")
 
 	board.PopulateRemainingPlayers()
 
@@ -370,13 +370,13 @@ func (board *GameBoard) PopulateRemainingPlayers() {
 
 	totalGhosts := board.countGhosts()
 
-	missingGoMen := MAX_GOMAN_PLAYERS - totalGoMen
+	missingGoMen := board.MaxGoMenAllowed - totalGoMen
 
 	for i := 0; i < missingGoMen; i++ {
 		board.addCPUGoMan(i)
 	}
 
-	missingGhosts := MAX_GOMAN_GHOSTS - totalGhosts
+	missingGhosts := board.MaxGoGhostsAllowed - totalGhosts
 
 	for i := 0; i < missingGhosts; i++ {
 		board.addCPUGhost(i)
@@ -389,7 +389,7 @@ func (board *GameBoard) addCPUGoMan(cpuId int) {
 
 	fmt.Println("Adding goMan:", strconv.Itoa(cpuId))
 	newCPUPlayer := new(Player)
-	newCPUPlayer.Name = "CPU-GOMAN-" + strconv.Itoa(cpuId)
+	newCPUPlayer.Name = "CPUMAN-" + strconv.Itoa(cpuId)
 	newCPUPlayer.Type = GoMan
 	newCPUPlayer.Location.X = PLAYER_START_X
 	newCPUPlayer.Location.Y = PLAYER_START_Y
@@ -403,7 +403,7 @@ func (board *GameBoard) addCPUGhost(cpuId int) {
 
 	fmt.Println("Adding goGhost:", strconv.Itoa(cpuId))
 	newCPUPlayer := new(Player)
-	newCPUPlayer.Name = "CPU-GOGHOST-" + strconv.Itoa(cpuId)
+	newCPUPlayer.Name = "CPUGHOST-" + strconv.Itoa(cpuId)
 	newCPUPlayer.Type = GoGhost
 	newCPUPlayer.Location.X = GHOST_START_X
 	newCPUPlayer.Location.Y = GHOST_START_Y

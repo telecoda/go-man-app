@@ -30,6 +30,7 @@ type GameBoard struct {
 	Players            map[string]*Player
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
+	WaitForPlayersSeconds int
 	State              GameState
 	PowerPillsActive   int
 	CreatedTime        time.Time
@@ -44,6 +45,7 @@ type GameBoardSummary struct {
 	Players            map[string]*Player
 	MaxGoMenAllowed    int
 	MaxGoGhostsAllowed int
+	WaitForPlayersSeconds int
 	State              GameState
 	CreatedTime        time.Time
 	LastUpdatedTime    time.Time
@@ -55,8 +57,6 @@ const BOARD_WIDTH int = 28
 const BOARD_HEIGHT int = 24
 
 const INITIAL_GAMES_HOSTED = 10
-
-const GAME_WAIT_SECONDS int = 60
 
 // cell types
 const WALL = '#'
@@ -184,7 +184,7 @@ func (board *GameBoard) UpdatePillsRemaining() {
 
 }
 
-func NewGameBoard() *GameBoard {
+func NewGameBoard(gameName string, maxGoMen int, maxGoGhosts int, waitForPlayersSeconds int) *GameBoard {
 	defaultBoard, err := initGameBoard()
 	if err != nil {
 		fmt.Println(err)
@@ -198,14 +198,15 @@ func NewGameBoard() *GameBoard {
 		return nil
 	}
 	gameBoard.Id = id
-	gameBoard.Name = "Init name"
+	gameBoard.Name = gameName
 	gameBoard.BoardCells = defaultBoard
 	gameBoard.State = NewGame
-	gameBoard.MaxGoGhostsAllowed = MAX_GOMAN_GHOSTS
-	gameBoard.MaxGoMenAllowed = MAX_GOMAN_PLAYERS
+	gameBoard.WaitForPlayersSeconds = waitForPlayersSeconds
+	gameBoard.MaxGoMenAllowed = maxGoMen
+	gameBoard.MaxGoGhostsAllowed = maxGoGhosts
 	gameBoard.Players = make(map[string]*Player)
 	gameBoard.CreatedTime = time.Now()
-	gameBoard.GameStartTime = gameBoard.CreatedTime.Add(time.Duration(GAME_WAIT_SECONDS) * time.Second)
+	gameBoard.GameStartTime = gameBoard.CreatedTime.Add(time.Duration(waitForPlayersSeconds) * time.Second)
 	gameBoard.UpdatePillsRemaining()
 
 	return gameBoard

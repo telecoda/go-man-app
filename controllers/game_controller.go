@@ -30,7 +30,21 @@ func GameCreate(w http.ResponseWriter, r *http.Request) {
 	log.Println("GameCreate started")
 	addResponseHeaders(w)
 
-	var board = models.NewGameBoard()
+	jsonBody, err := getRequestBody(r)
+	if err != nil {
+		http.Error(w, "Failed to get request body", http.StatusBadRequest)
+		return
+	}
+
+	// unmarshall create game request
+	newGame, err := unmarshallGameBoardSummary(jsonBody)
+
+	if err != nil {
+		http.Error(w, "Failed to unmarshall game"+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var board = models.NewGameBoard(newGame.Name, newGame.MaxGoMenAllowed, newGame.MaxGoGhostsAllowed, newGame.WaitForPlayersSeconds)
 
 	board.CreateGameBoard()
 
@@ -165,11 +179,10 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if board == nil {
-		fmt.Println("Board not found:" , gameId)
+		fmt.Println("Board not found:", gameId)
 		http.NotFound(w, r)
 		return
 	}
-
 
 	err = board.MovePlayer(*player)
 
@@ -200,5 +213,15 @@ func unmarshallPlayer(jsonBody []byte) (*models.Player, error) {
 	err := json.Unmarshal(jsonBody, &player)
 
 	return &player, err
+
+}
+
+func unmarshallGameBoardSummary(jsonBody []byte) (*models.GameBoardSummary, error) {
+
+	var board models.GameBoardSummary
+
+	err := json.Unmarshal(jsonBody, &board)
+
+	return &board, err
 
 }
