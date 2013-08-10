@@ -48,7 +48,7 @@ const GHOST_START_Y = 10
 //const MAX_GOMAN_PLAYERS int = 1
 //const MAX_GOMAN_GHOSTS int = 4
 
-const DEATH_WAIT_SECONDS = 3
+const DEATH_WAIT_SECONDS = 1
 const KILLED_GHOST_POINTS = 100
 const KILLED_GOMAN_POINTS = 100
 
@@ -120,7 +120,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	playerServerState.Location.Y = player.Location.Y
 
 	// check for player collisions
-	board.checkPlayerCollisions(*playerServerState)
+	board.checkPlayerCollisions(playerServerState)
 
 	// get updated player to check if changed
 	playerServerState = board.getPlayerFromServer(player.Id)
@@ -128,7 +128,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	return nil
 }
 
-func (board *GameBoard) checkPlayerCollisions(currentPlayer Player) {
+func (board *GameBoard) checkPlayerCollisions(currentPlayer *Player) {
 
 	for id, _ := range board.Players {
 		player := board.Players[id]
@@ -142,7 +142,7 @@ func (board *GameBoard) checkPlayerCollisions(currentPlayer Player) {
 			// check co-ords
 			if player.Location.X == currentPlayer.Location.X &&
 				player.Location.Y == currentPlayer.Location.Y {
-				board.playersCollided(&currentPlayer, player)
+				board.playersCollided(currentPlayer, player)
 			}
 		}
 	}
@@ -174,11 +174,13 @@ func (board *GameBoard) playersCollided(player1 *Player, player2 *Player) {
 		// if powerpill not active goman will die
 		if player1.Type == GoGhost {
 			go board.gomanDeath(player2)
+			fmt.Println("goman death player2")
 
 			player1.Score += KILLED_GOMAN_POINTS
 
 		} else {
 			go board.gomanDeath(player1)
+			fmt.Println("goman death player1")
 
 			player2.Score += KILLED_GOMAN_POINTS
 		}
@@ -477,7 +479,7 @@ func playAsCPU(gameId string, playerId string) {
 		err = board.MovePlayer(movedPlayer)
 
 		if err != nil {
-			fmt.Println("Error moving player, carry on", err)
+			//fmt.Println("Error moving player, carry on", err)
 		}
 
 	}

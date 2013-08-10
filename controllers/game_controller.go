@@ -146,7 +146,6 @@ func AddPlayer(w http.ResponseWriter, r *http.Request) {
 // received MainPlayer as JSON request
 func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("Update player started")
 	addResponseHeaders(w)
 
 	jsonBody, err := getRequestBody(r)
@@ -170,7 +169,6 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 	gameId := vars["gameId"]
 	//playerId := vars["playerId"]
 
-	fmt.Println("Getting game board", gameId)
 	board, err := models.LoadGameBoard(gameId)
 
 	if err != nil {
@@ -192,7 +190,6 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Save game board", gameId)
 	err = board.SaveGameBoard()
 
 	if err != nil {

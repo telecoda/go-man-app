@@ -27,12 +27,9 @@ func (p *Persister) Create(board *GameBoard) (err error) {
 
 func (p *Persister) Update(board *GameBoard) (err error) {
 
-	fmt.Println("Saving gameboard as JSON:", board.Id)
-
 	// create an in memory instance of the game
 	games[board.Id] = board
 
-	fmt.Println("Saved gameboard")
 	return nil
 
 }

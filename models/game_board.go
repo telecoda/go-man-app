@@ -67,7 +67,7 @@ const BONUS = '$'
 // points
 const PILL_POINTS = 10
 const POWER_PILL_POINTS = 50
-const POWER_PILL_WAIT_SECONDS = 5
+const POWER_PILL_WAIT_SECONDS = 10
 
 var GamePersister = InMemoryPersister()
 
