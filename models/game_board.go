@@ -184,18 +184,18 @@ func (board *GameBoard) UpdatePillsRemaining() {
 
 }
 
-func NewGameBoard(gameName string, maxGoMen int, maxGoGhosts int, waitForPlayersSeconds int) *GameBoard {
+func NewGameBoard(gameName string, maxGoMen int, maxGoGhosts int, waitForPlayersSeconds int) (*GameBoard, error) {
 	defaultBoard, err := initGameBoard()
 	if err != nil {
 		fmt.Println(err)
-		return nil
+		return nil, err
 	}
 	gameBoard := new(GameBoard)
 
 	id, err := utils.GenUUID()
 	if err != nil {
 		fmt.Println("Error generating guid")
-		return nil
+		return nil, err
 	}
 	gameBoard.Id = id
 	gameBoard.Name = gameName
@@ -209,5 +209,5 @@ func NewGameBoard(gameName string, maxGoMen int, maxGoGhosts int, waitForPlayers
 	gameBoard.GameStartTime = gameBoard.CreatedTime.Add(time.Duration(waitForPlayersSeconds) * time.Second)
 	gameBoard.UpdatePillsRemaining()
 
-	return gameBoard
+	return gameBoard, nil
 }

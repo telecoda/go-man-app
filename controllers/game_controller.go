@@ -44,7 +44,12 @@ func GameCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var board = models.NewGameBoard(newGame.Name, newGame.MaxGoMenAllowed, newGame.MaxGoGhostsAllowed, newGame.WaitForPlayersSeconds)
+	var board *models.GameBoard
+	board, err = models.NewGameBoard(newGame.Name, newGame.MaxGoMenAllowed, newGame.MaxGoGhostsAllowed, newGame.WaitForPlayersSeconds)
+	if err != nil {
+		http.Error(w, "Failed to create a new game"+err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	board.CreateGameBoard()
 
