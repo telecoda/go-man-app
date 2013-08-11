@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	"github.com/telecoda/go-man/utils"
+	"github.com/telecoda/go-man-app/utils"
 	"time"
 )
 
@@ -24,32 +24,32 @@ const (
 )
 
 type GameBoard struct {
-	Id                 string
-	Name               string
-	PillsRemaining     int
-	Players            map[string]*Player
-	MaxGoMenAllowed    int
-	MaxGoGhostsAllowed int
+	Id                    string
+	Name                  string
+	PillsRemaining        int
+	Players               map[string]*Player
+	MaxGoMenAllowed       int
+	MaxGoGhostsAllowed    int
 	WaitForPlayersSeconds int
-	State              GameState
-	PowerPillsActive   int
-	CreatedTime        time.Time
-	LastUpdatedTime    time.Time
-	GameStartTime      time.Time
-	BoardCells         [][]rune
+	State                 GameState
+	PowerPillsActive      int
+	CreatedTime           time.Time
+	LastUpdatedTime       time.Time
+	GameStartTime         time.Time
+	BoardCells            [][]rune
 }
 
 type GameBoardSummary struct {
-	Id                 string
-	Name               string
-	Players            map[string]*Player
-	MaxGoMenAllowed    int
-	MaxGoGhostsAllowed int
+	Id                    string
+	Name                  string
+	Players               map[string]*Player
+	MaxGoMenAllowed       int
+	MaxGoGhostsAllowed    int
 	WaitForPlayersSeconds int
-	State              GameState
-	CreatedTime        time.Time
-	LastUpdatedTime    time.Time
-	GameStartTime      time.Time
+	State                 GameState
+	CreatedTime           time.Time
+	LastUpdatedTime       time.Time
+	GameStartTime         time.Time
 }
 
 // dimensions

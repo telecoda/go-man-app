@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/telecoda/go-man/models"
+	"github.com/telecoda/go-man-app/models"
 	"log"
 	"net/http"
 )

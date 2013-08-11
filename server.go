@@ -3,7 +3,7 @@ package main
 import (
 	//"fmt"
 	"github.com/gorilla/mux"
-	"github.com/telecoda/go-man/controllers"
+	"github.com/telecoda/go-man-app/controllers"
 	"net/http"
 )
 

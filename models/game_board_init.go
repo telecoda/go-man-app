@@ -2,7 +2,7 @@ package models
 
 import (
 	"bufio"
-	"github.com/telecoda/go-man/utils"
+	"github.com/telecoda/go-man-app/utils"
 	"os"
 )
 
