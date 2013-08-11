@@ -3,7 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/telecoda/go-man/models"
+	"github.com/telecoda/go-man-app/models"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -15,7 +15,6 @@ var playingBoardPlayerId string
 
 var waitingBoardId string
 var waitingBoardPlayerId string
-
 
 func TestCreateGame(t *testing.T) {
 
@@ -29,7 +28,7 @@ func TestCreateGame(t *testing.T) {
 
 	res, err := http.Post(ts.URL, "application/json", nil)
 	if err != nil {
-		t.Errorf("Error POSTing request to API:",err)
+		t.Errorf("Error POSTing request to API:", err)
 	}
 	jsonBody, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
@@ -80,7 +79,7 @@ func TestGameList(t *testing.T) {
 
 	res, err := http.Get(ts.URL)
 	if err != nil {
-		t.Errorf("Error GETting request from API:",err)
+		t.Errorf("Error GETting request from API:", err)
 	}
 	jsonBody, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
@@ -116,7 +115,6 @@ func TestGameList(t *testing.T) {
 
 }
 
-
 func TestGameListFilteredByState(t *testing.T) {
 
 	setup()
@@ -130,7 +128,7 @@ func TestGameListFilteredByState(t *testing.T) {
 	requestURL := ts.URL + "?state=waiting"
 	res, err := http.Get(requestURL)
 	if err != nil {
-		t.Errorf("Error GETting request from API:",err)
+		t.Errorf("Error GETting request from API:", err)
 	}
 	jsonBody, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
@@ -154,7 +152,7 @@ func TestGameListFilteredByState(t *testing.T) {
 
 	// check values of boards returned
 
-	if len(boards) != 1{
+	if len(boards) != 1 {
 		t.Errorf("There should be 1 boards but we received %d", len(boards))
 	}
 
@@ -165,7 +163,6 @@ func TestGameListFilteredByState(t *testing.T) {
 	fmt.Println("TestGameListFilteredByState ended")
 
 }
-
 
 func setup() {
 	fmt.Println("Test setup")
@@ -209,5 +206,3 @@ func addTestGames() {
 	models.GamePersister.Create(waitingBoard)
 
 }
-
-

@@ -3,7 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/telecoda/go-man/utils"
+	"github.com/telecoda/go-man-app/utils"
 	"math"
 	"math/rand"
 	"strconv"

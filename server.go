@@ -1,19 +1,21 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/gorilla/mux"
-	"github.com/telecoda/go-man/controllers"
-	"log"
+	"github.com/telecoda/go-man-app/controllers"
 	"net/http"
 )
 
-func main() {
+var r *mux.Router
 
-	fmt.Println("go-man server starting")
+func init() {
 
-	r := mux.NewRouter()
+	//fmt.Println("go-man server starting1")
+	r = mux.NewRouter()
+
 	r.HandleFunc("/", controllers.RootHandler).Methods("GET")
+	//fmt.Println("go-man server starting2")
 	// list games
 	r.HandleFunc("/games", controllers.GameList).Methods("GET")
 	// create new game
@@ -30,6 +32,4 @@ func main() {
 
 	http.Handle("/", r)
 
-	fmt.Println("go-man server running")
-	log.Fatal(http.ListenAndServe(":9000", r))
 }
