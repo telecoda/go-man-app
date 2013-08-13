@@ -47,13 +47,13 @@ type PlayerMove struct {
 
 type PlayerMoveResponse struct {
 	Board GameBoard
-	err   error
+	Error error
 }
 
 func NewPlayerMoveResponse(board GameBoard, err error) PlayerMoveResponse {
 	response := new(PlayerMoveResponse)
 	response.Board = board
-	response.err = err
+	response.Error = err
 	return *response
 }
 
@@ -70,11 +70,11 @@ const DEATH_WAIT_SECONDS = 1
 const KILLED_GHOST_POINTS = 100
 const KILLED_GOMAN_POINTS = 100
 
-var gameChannels map[string]chan PlayerMove
+var GameChannels map[string]chan PlayerMove
 
 func init() {
 
-	gameChannels = make(map[string]chan PlayerMove)
+	GameChannels = make(map[string]chan PlayerMove)
 
 }
 
@@ -621,7 +621,7 @@ func concurrentPlayAsCPU(gameId string, playerId string) {
 
 		// send request to game channel
 		var gameRequestChannel chan PlayerMove
-		gameRequestChannel = gameChannels[gameId]
+		gameRequestChannel = GameChannels[gameId]
 
 		if gameRequestChannel == nil {
 			fmt.Println("Error no request channel found for game")
@@ -636,8 +636,8 @@ func concurrentPlayAsCPU(gameId string, playerId string) {
 
 		playerMoveResponse = <-playerResponseChannel
 
-		if playerMoveResponse.err != nil {
-			fmt.Println("Error moving player, carry on", playerMoveResponse.err)
+		if playerMoveResponse.Error != nil {
+			fmt.Println("Error moving player, carry on", playerMoveResponse.Error)
 			fmt.Println("Player in error:", playerMoveRequest.PlayerToMove.Name)
 		}
 

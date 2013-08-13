@@ -73,7 +73,7 @@ var GamePersister = InMemoryPersister()
 
 func (board *GameBoard) CreateGameBoard() error {
 	gameChannel := createNewGameChannel()
-	gameChannels[board.Id] = gameChannel
+	GameChannels[board.Id] = gameChannel
 	return GamePersister.Create(board)
 }
 

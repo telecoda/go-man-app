@@ -149,6 +149,89 @@ func AddPlayer(w http.ResponseWriter, r *http.Request) {
 }
 
 // received MainPlayer as JSON request
+func ConcurrentUpdatePlayer(w http.ResponseWriter, r *http.Request) {
+
+	addResponseHeaders(w)
+
+	jsonBody, err := getRequestBody(r)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Failed to get request body", http.StatusInternalServerError)
+		return
+	}
+
+	// unmarshall Player request
+	player, err := unmarshallPlayer(jsonBody)
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Failed to unmarshall player", http.StatusInternalServerError)
+		return
+	}
+
+	// fetch current board
+	vars := mux.Vars(r)
+	gameId := vars["gameId"]
+	//playerId := vars["playerId"]
+
+	board, err := models.LoadGameBoard(gameId)
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if board == nil {
+		fmt.Println("Board not found:", gameId)
+		http.NotFound(w, r)
+		return
+	}
+
+	playerMoveRequest := new(models.PlayerMove)
+	playerMoveRequest.GameId = gameId
+	playerMoveRequest.PlayerToMove = *player
+
+	playerResponseChannel := make(chan models.PlayerMoveResponse)
+
+	playerMoveRequest.ResponseChannel = playerResponseChannel
+
+	// send request to game channel
+	var gameRequestChannel chan models.PlayerMove
+	gameRequestChannel = models.GameChannels[gameId]
+
+	if gameRequestChannel == nil {
+		fmt.Println("Error no request channel found for game")
+		return
+	}
+
+	// send
+	gameRequestChannel <- *playerMoveRequest
+
+	// receive response
+	var playerMoveResponse models.PlayerMoveResponse
+
+	playerMoveResponse = <-playerResponseChannel
+
+	if playerMoveResponse.Error != nil {
+		fmt.Println(playerMoveResponse.Error)
+		http.Error(w, playerMoveResponse.Error.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = playerMoveResponse.Board.SaveGameBoard()
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	returnBoardAsJson(w, board)
+
+}
+
+// received MainPlayer as JSON request
 func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 	addResponseHeaders(w)
