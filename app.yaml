@@ -8,9 +8,8 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /data/maze.txt
-  static_files: /data/maze.txt
-  upload: data\maze.txt
-
+- url: /data
+  static_dir: data
+  
 - url: /.*
   script: _go_app

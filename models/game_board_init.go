@@ -2,7 +2,7 @@ package models
 
 import (
 	"bufio"
-	"github.com/telecoda/go-man-app/utils"
+	//"github.com/telecoda/go-man-app/utils"
 	"os"
 )
 
@@ -13,7 +13,8 @@ func initGameBoard() ([][]rune, error) {
 	defaultBoard := make([][]rune, BOARD_HEIGHT)
 
 	// this path will be of the controllers package
-	filePath := utils.GetAbsolutePathOfCurrentPackage("../data/maze.txt")
+	//filePath := utils.GetAbsolutePathOfCurrentPackage("../data/maze.txt")
+	filePath := "maze.txt"
 
 	f, err := os.Open(filePath)
 	if err != nil {

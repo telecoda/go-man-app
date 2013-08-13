@@ -12,7 +12,12 @@ func TestCreateBoard(t *testing.T) {
 
 	fmt.Println("TestCreateBoard started")
 
-	board := NewGameBoard()
+	board, err := NewGameBoard("test game", 1, 4, 1)
+
+	if err != nil {
+		t.Errorf("NewGameBoard failed:", err)
+		return
+	}
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
@@ -26,18 +31,18 @@ func TestCreateBoard(t *testing.T) {
 	}
 
 	// check player count
-	if board.MaxGoMenAllowed != MAX_GOMAN_PLAYERS {
+	if board.MaxGoMenAllowed != 1 {
 		t.Errorf("Max goman players not correct")
 		return
 	}
 
 	// check ghost count
-	if board.MaxGoGhostsAllowed != MAX_GOMAN_GHOSTS {
+	if board.MaxGoGhostsAllowed != 4 {
 		t.Errorf("Max goman ghosts not correct")
 		return
 	}
 
-	err := board.SaveGameBoard()
+	err = board.SaveGameBoard()
 
 	if err != nil {
 		t.Errorf("SaveGameBoard failed:", err)
@@ -52,7 +57,12 @@ func TestAddGoManPlayerWorksWithValidBoard(t *testing.T) {
 
 	fmt.Println("TestAddGoManPlayerWorksWithValidBoard started")
 
-	board := NewGameBoard()
+	board, err := NewGameBoard("test game", 1, 4, 1)
+
+	if err != nil {
+		t.Errorf("NewGameBoard failed:", err)
+		return
+	}
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
@@ -103,7 +113,12 @@ func TestAddGoManPlayerFailsIfTooManyGoMen(t *testing.T) {
 
 	fmt.Println("TestAddGoManPlayerFailsIfTooManyGoMen - started")
 
-	board := NewGameBoard()
+	board, err := NewGameBoard("test game", 1, 4, 1)
+
+	if err != nil {
+		t.Errorf("NewGameBoard failed:", err)
+		return
+	}
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
@@ -151,7 +166,12 @@ func TestAddGoManPlayerFailsIfTooManyGoGhosts(t *testing.T) {
 
 	fmt.Println("TestAddGoGhostFailsIfTooManyGoGhosts - started")
 
-	board := NewGameBoard()
+	board, err := NewGameBoard("test game", 1, 4, 1)
+
+	if err != nil {
+		t.Errorf("NewGameBoard failed:", err)
+		return
+	}
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
@@ -247,7 +267,12 @@ func TestAddPlayerFailsWithInvalidType(t *testing.T) {
 
 	fmt.Println("TestAddPlayerFailsWithInvalidType - started")
 
-	board := NewGameBoard()
+	board, err := NewGameBoard("test game", 1, 4, 1)
+
+	if err != nil {
+		t.Errorf("NewGameBoard failed:", err)
+		return
+	}
 
 	if board == nil {
 		t.Errorf("NewGameBoard failed to create a gameBoard")
@@ -434,7 +459,9 @@ func deleteAllGames() {
 
 func addTestGames() {
 	// create board at playing state
-	var playingBoard = NewGameBoard()
+	var playingBoard *GameBoard
+	playingBoard, err := NewGameBoard("test game", 1, 4, 1)
+
 	playingBoardId = playingBoard.Id
 	playingBoard.State = PlayingGame
 	// add player
@@ -450,9 +477,14 @@ func addTestGames() {
 
 	// create board at waiting state
 	GamePersister.Create(playingBoard)
-	var board2 = NewGameBoard()
+	var board2 *GameBoard
+	board2, err = NewGameBoard("test game", 1, 4, 1)
+
 	GamePersister.Create(board2)
-	var board3 = NewGameBoard()
+
+	var board3 *GameBoard
+	board3, err = NewGameBoard("test game", 1, 4, 1)
+
 	GamePersister.Create(board3)
 
 }

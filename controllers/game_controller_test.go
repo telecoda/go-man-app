@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -26,7 +27,13 @@ func TestCreateGame(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(GameCreate))
 	defer ts.Close()
 
-	res, err := http.Post(ts.URL, "application/json", nil)
+	createBoardString := "{ \"Name\" : \"test game\" , " +
+		" \"MaxGoMenAllowed\" : 1 , " +
+		" \"MaxGhostsMenAllowed\" : 4 , " +
+		" \"WaitForPlayersSeconds\" : 60 }"
+
+	stringReader := strings.NewReader(createBoardString)
+	res, err := http.Post(ts.URL, "application/json", stringReader)
 	if err != nil {
 		t.Errorf("Error POSTing request to API:", err)
 	}
@@ -183,7 +190,14 @@ func deleteAllGames() {
 
 func addTestGames() {
 	// create board at playing state
-	var playingBoard = models.NewGameBoard()
+	var playingBoard *models.GameBoard
+	playingBoard, err := models.NewGameBoard("test game", 1, 4, 1)
+
+	if err != nil {
+		panic(err)
+		return
+	}
+
 	playingBoardId = playingBoard.Id
 	playingBoard.State = models.PlayingGame
 	// add player
@@ -200,7 +214,14 @@ func addTestGames() {
 	models.GamePersister.Create(playingBoard)
 
 	// create board at waiting state
-	var waitingBoard = models.NewGameBoard()
+	var waitingBoard *models.GameBoard
+	waitingBoard, err = models.NewGameBoard("test game", 1, 4, 1)
+
+	if err != nil {
+		panic(err)
+		return
+	}
+
 	waitingBoardId = waitingBoard.Id
 	waitingBoard.State = models.WaitingForPlayers
 	models.GamePersister.Create(waitingBoard)
