@@ -122,9 +122,6 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	// check for player collisions
 	board.checkPlayerCollisions(playerServerState)
 
-	// get updated player to check if changed
-	playerServerState = board.getPlayerFromServer(player.Id)
-
 	return nil
 }
 
