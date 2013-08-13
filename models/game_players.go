@@ -39,6 +39,24 @@ type Player struct {
 	Lives         int
 }
 
+type PlayerMove struct {
+	GameId          string
+	PlayerToMove    Player
+	ResponseChannel chan (PlayerMoveResponse)
+}
+
+type PlayerMoveResponse struct {
+	Board GameBoard
+	err   error
+}
+
+func NewPlayerMoveResponse(board GameBoard, err error) PlayerMoveResponse {
+	response := new(PlayerMoveResponse)
+	response.Board = board
+	response.err = err
+	return *response
+}
+
 const PLAYER_START_X = 13
 const PLAYER_START_Y = 14
 
@@ -51,6 +69,125 @@ const GHOST_START_Y = 10
 const DEATH_WAIT_SECONDS = 1
 const KILLED_GHOST_POINTS = 100
 const KILLED_GOMAN_POINTS = 100
+
+var gameChannels map[string]chan PlayerMove
+
+func init() {
+
+	gameChannels = make(map[string]chan PlayerMove)
+
+}
+
+// there is one channel per game used to receive and process player moves
+func createNewGameChannel() chan PlayerMove {
+
+	playerRequestChannel := make(chan PlayerMove)
+
+	go func() {
+		// process concurrent player updates
+		for {
+
+			playerMoveRequest := <-playerRequestChannel
+			fmt.Println("Request received for game :", playerMoveRequest.GameId)
+			fmt.Println("Request received for player :", playerMoveRequest.PlayerToMove.Name)
+			ConcurrentMovePlayer(playerMoveRequest)
+		}
+
+	}()
+
+	return playerRequestChannel
+
+}
+
+func ConcurrentMovePlayer(playerMove PlayerMove) {
+
+	// fetch board
+	board := games[playerMove.GameId]
+
+	var response PlayerMoveResponse
+	// only allow moves when game playing
+	if board.State != PlayingGame {
+		response = NewPlayerMoveResponse(*board, errors.New("Not playing, you cannot move now"))
+		playerMove.ResponseChannel <- response
+		return
+	}
+
+	// check if player belongs to this game
+	playerServerState := board.getPlayerFromServer(playerMove.PlayerToMove.Id)
+
+	if &playerServerState == nil {
+		response = NewPlayerMoveResponse(*board, errors.New("You are not a player in this game."))
+		playerMove.ResponseChannel <- response
+		return
+	}
+
+	// check player is alive
+	if playerServerState.State != Alive {
+		response = NewPlayerMoveResponse(*board, errors.New("You are not alive so cannot move."))
+		playerMove.ResponseChannel <- response
+		return
+	}
+
+	// check move is valid
+	if !isMoveValid(playerServerState.Location, playerMove.PlayerToMove.Location) {
+		response = NewPlayerMoveResponse(*board, errors.New("Cheat, invalid move"))
+		playerMove.ResponseChannel <- response
+		return
+	}
+
+	// check for wrap around to other side of board
+	if playerMove.PlayerToMove.Location.X < 0 {
+		fmt.Println("Player wrap left")
+		playerMove.PlayerToMove.Location.X = (BOARD_WIDTH - 1)
+	}
+
+	if playerMove.PlayerToMove.Location.X >= BOARD_WIDTH {
+		fmt.Println("Player wrap right")
+		playerMove.PlayerToMove.Location.X = 0
+	}
+
+	cell := board.GetCellAtLocation(playerMove.PlayerToMove.Location)
+
+	switch cell {
+	case WALL:
+		response = NewPlayerMoveResponse(*board, errors.New("Invalid move, you can't walk through walls"))
+		playerMove.ResponseChannel <- response
+		return
+	case PILL:
+		if playerMove.PlayerToMove.Type == GoMan {
+			board.eatPillAtLocation(playerMove.PlayerToMove.Location)
+			playerServerState.Score += PILL_POINTS
+			board.UpdatePillsRemaining()
+			if board.PillsRemaining == 0 {
+				board.gameWon()
+			}
+		}
+		break
+	case POWER_PILL:
+		if playerMove.PlayerToMove.Type == GoMan {
+			board.eatPowerPillAtLocation(playerMove.PlayerToMove.Location)
+			playerServerState.Score += POWER_PILL_POINTS
+			board.UpdatePillsRemaining()
+			if board.PillsRemaining == 0 {
+				board.gameWon()
+			}
+		}
+		break
+
+	}
+
+	// update board with player's location
+	fmt.Println("Moving player:", playerServerState.Name)
+	playerServerState.Location.X = playerMove.PlayerToMove.Location.X
+	playerServerState.Location.Y = playerMove.PlayerToMove.Location.Y
+
+	// check for player collisions
+	board.checkPlayerCollisions(playerServerState)
+
+	// no errors
+	response = NewPlayerMoveResponse(*board, nil)
+	playerMove.ResponseChannel <- response
+}
 
 func (board *GameBoard) MovePlayer(player Player) error {
 
@@ -421,7 +558,8 @@ func (board *GameBoard) startGame() {
 	for _, player := range board.Players {
 		if player.cpuControlled {
 
-			go playAsCPU(board.Id, player.Id)
+			//go playAsCPU(board.Id, player.Id)
+			go concurrentPlayAsCPU(board.Id, player.Id)
 		}
 	}
 }
@@ -429,6 +567,82 @@ func (board *GameBoard) startGame() {
 func (board *GameBoard) gameWon() {
 
 	board.State = GameWon
+}
+
+func concurrentPlayAsCPU(gameId string, playerId string) {
+
+	/* this function will repeat until the current game ends */
+
+	var gamePlaying = true
+
+	for gamePlaying {
+
+		// wait for 1/60 of a second
+		//timer := time.NewTimer(time.Second / 60)
+
+		// slow down enemy to 1/4 a move
+		timer := time.NewTimer(time.Second / 4)
+		<-timer.C
+
+		// get current board state
+		board, err := LoadGameBoard(gameId)
+
+		if err != nil {
+			fmt.Println("Error retrieving game, aborting.", err)
+			return
+		}
+
+		if board.State == GameWon {
+			// stop playing game is won
+			return
+		}
+
+		if board.State == GameOver {
+			// stop playing game is over
+			return
+		}
+
+		player := board.getPlayerFromServer(playerId)
+
+		if &player == nil {
+			fmt.Println("Error player not found in game")
+			return
+		}
+
+		movedPlayer := board.planBestMoveForPlayer(*player)
+
+		playerMoveRequest := new(PlayerMove)
+		playerMoveRequest.GameId = gameId
+		playerMoveRequest.PlayerToMove = movedPlayer
+
+		playerResponseChannel := make(chan PlayerMoveResponse)
+
+		playerMoveRequest.ResponseChannel = playerResponseChannel
+
+		// send request to game channel
+		var gameRequestChannel chan PlayerMove
+		gameRequestChannel = gameChannels[gameId]
+
+		if gameRequestChannel == nil {
+			fmt.Println("Error no request channel found for game")
+			return
+		}
+
+		// send
+		gameRequestChannel <- *playerMoveRequest
+
+		// receive response
+		var playerMoveResponse PlayerMoveResponse
+
+		playerMoveResponse = <-playerResponseChannel
+
+		if playerMoveResponse.err != nil {
+			fmt.Println("Error moving player, carry on", playerMoveResponse.err)
+			fmt.Println("Player in error:", playerMoveRequest.PlayerToMove.Name)
+		}
+
+	}
+
 }
 
 func playAsCPU(gameId string, playerId string) {

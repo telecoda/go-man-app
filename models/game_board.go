@@ -72,6 +72,8 @@ const POWER_PILL_WAIT_SECONDS = 10
 var GamePersister = InMemoryPersister()
 
 func (board *GameBoard) CreateGameBoard() error {
+	gameChannel := createNewGameChannel()
+	gameChannels[board.Id] = gameChannel
 	return GamePersister.Create(board)
 }
 
