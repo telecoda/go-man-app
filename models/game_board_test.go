@@ -413,7 +413,7 @@ func TestMovePlayerWithValidMoveWorks(t *testing.T) {
 
 	player.Location.X++
 
-	board.MovePlayer(*player)
+	board.ConcurrentMovePlayer(*player)
 	// move player
 	if err != nil {
 		t.Errorf("Error moving player on board:", err.Error)

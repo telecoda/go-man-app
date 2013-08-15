@@ -78,11 +78,13 @@ func (board *GameBoard) CreateGameBoard() error {
 }
 
 func (board *GameBoard) SaveGameBoard() error {
+	fmt.Println("Save board")
 	board.LastUpdatedTime = time.Now()
 	return GamePersister.Update(board)
 }
 
 func LoadGameBoard(id string) (*GameBoard, error) {
+	fmt.Println("Load board")
 	return GamePersister.Read(id)
 }
 

@@ -210,79 +210,6 @@ func ConcurrentMovePlayer(playerMove PlayerMove) {
 	playerMove.ResponseChannel <- response
 }
 
-func (board *GameBoard) MovePlayer(player Player) error {
-
-	// only allow moves when game playing
-	if board.State != PlayingGame {
-		return errors.New("Not playing, you cannot move now")
-	}
-
-	// check if player belongs to this game
-	playerServerState := board.getPlayer(player.Id)
-
-	if &playerServerState == nil {
-		return errors.New("You are not a player in this game.")
-	}
-
-	// check player is alive
-	if playerServerState.State != Alive {
-		return errors.New("You are not alive so cannot move.")
-	}
-
-	// check move is valid
-	if !isMoveValid(playerServerState.Location, player.Location) {
-		return errors.New("Cheat, invalid move")
-	}
-
-	// check for wrap around to other side of board
-	if player.Location.X < 0 {
-		fmt.Println("Player wrap left")
-		player.Location.X = (BOARD_WIDTH - 1)
-	}
-
-	if player.Location.X >= BOARD_WIDTH {
-		fmt.Println("Player wrap right")
-		player.Location.X = 0
-	}
-
-	cell := board.GetCellAtLocation(player.Location)
-
-	switch cell {
-	case WALL:
-		return errors.New("Invalid move, you can't walk through walls")
-	case PILL:
-		if player.Type == GoMan {
-			board.eatPillAtLocation(player.Location)
-			playerServerState.Score += PILL_POINTS
-			board.UpdatePillsRemaining()
-			if board.PillsRemaining == 0 {
-				board.gameWon()
-			}
-		}
-		break
-	case POWER_PILL:
-		if player.Type == GoMan {
-			board.eatPowerPillAtLocation(player.Location)
-			playerServerState.Score += POWER_PILL_POINTS
-			board.UpdatePillsRemaining()
-			if board.PillsRemaining == 0 {
-				board.gameWon()
-			}
-		}
-		break
-
-	}
-
-	// update board with player's location
-	playerServerState.Location.X = player.Location.X
-	playerServerState.Location.Y = player.Location.Y
-
-	// check for player collisions
-	board.checkPlayerCollisions(playerServerState)
-
-	return nil
-}
-
 func (board *GameBoard) checkPlayerCollisions(currentPlayer *Player) {
 
 	for id, _ := range board.Players {
@@ -575,7 +502,6 @@ func (board *GameBoard) startGame() {
 	for _, player := range board.Players {
 		if player.cpuControlled {
 
-			//go playAsCPU(board.Id, player.Id)
 			go concurrentPlayAsCPU(board.Id, player.Id)
 		}
 	}
@@ -656,58 +582,6 @@ func concurrentPlayAsCPU(gameId string, playerId string) {
 		if playerMoveResponse.Error != nil {
 			fmt.Println("Error moving player, carry on", playerMoveResponse.Error)
 			fmt.Println("Player in error:", playerMoveRequest.PlayerToMove.Name)
-		}
-
-	}
-
-}
-
-func playAsCPU(gameId string, playerId string) {
-
-	/* this function will repeat until the current game ends */
-
-	var gamePlaying = true
-
-	for gamePlaying {
-
-		// wait for 1/60 of a second
-		//timer := time.NewTimer(time.Second / 60)
-
-		// slow down enemy to 1/4 a move
-		timer := time.NewTimer(time.Second / 4)
-		<-timer.C
-
-		// get current board state
-		board, err := LoadGameBoard(gameId)
-
-		if err != nil {
-			fmt.Println("Error retrieving game, aborting.", err)
-			return
-		}
-
-		if board.State == GameWon {
-			// stop playing game is won
-			return
-		}
-
-		if board.State == GameOver {
-			// stop playing game is over
-			return
-		}
-
-		player := board.getPlayer(playerId)
-
-		if &player == nil {
-			fmt.Println("Error player not found in game")
-			return
-		}
-
-		movedPlayer := board.planBestMoveForPlayer(*player)
-
-		err = board.MovePlayer(movedPlayer)
-
-		if err != nil {
-			//fmt.Println("Error moving player, carry on", err)
 		}
 
 	}
