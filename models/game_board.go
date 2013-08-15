@@ -72,15 +72,19 @@ const POWER_PILL_WAIT_SECONDS = 10
 var GamePersister = InMemoryPersister()
 
 func (board *GameBoard) CreateGameBoard() error {
+	gameChannel := createNewGameChannel()
+	GameChannels[board.Id] = gameChannel
 	return GamePersister.Create(board)
 }
 
 func (board *GameBoard) SaveGameBoard() error {
+	fmt.Println("Save board")
 	board.LastUpdatedTime = time.Now()
 	return GamePersister.Update(board)
 }
 
 func LoadGameBoard(id string) (*GameBoard, error) {
+	fmt.Println("Load board")
 	return GamePersister.Read(id)
 }
 

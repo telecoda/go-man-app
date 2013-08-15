@@ -121,8 +121,14 @@ func AddPlayer(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Getting game board", gameId)
 	board, err := models.LoadGameBoard(gameId)
 
-	if board == nil || err != nil {
+	if board == nil {
 		http.NotFound(w, r)
+		return
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -149,7 +155,7 @@ func AddPlayer(w http.ResponseWriter, r *http.Request) {
 }
 
 // received MainPlayer as JSON request
-func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
+func ConcurrentUpdatePlayer(w http.ResponseWriter, r *http.Request) {
 
 	addResponseHeaders(w)
 
@@ -187,24 +193,38 @@ func UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = board.MovePlayer(*player)
+	playerMoveRequest := new(models.PlayerMove)
+	playerMoveRequest.GameId = gameId
+	playerMoveRequest.PlayerToMove = *player
 
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	playerResponseChannel := make(chan models.PlayerMoveResponse)
+
+	playerMoveRequest.ResponseChannel = playerResponseChannel
+
+	// send request to game channel
+	var gameRequestChannel chan models.PlayerMove
+	gameRequestChannel = models.GameChannels[gameId]
+
+	if gameRequestChannel == nil {
+		fmt.Println("Error no request channel found for game")
 		return
 	}
 
-	err = board.SaveGameBoard()
+	// send
+	gameRequestChannel <- *playerMoveRequest
 
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// receive response
+	var playerMoveResponse models.PlayerMoveResponse
 
+	playerMoveResponse = <-playerResponseChannel
+
+	if playerMoveResponse.Error != nil {
+		fmt.Println(playerMoveResponse.Error)
+		http.Error(w, playerMoveResponse.Error.Error(), http.StatusBadRequest)
 		return
 	}
 
-	returnBoardAsJson(w, board)
+	returnBoardAsJson(w, &playerMoveResponse.Board)
 
 }
 

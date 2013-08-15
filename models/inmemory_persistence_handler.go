@@ -39,6 +39,8 @@ func (p *Persister) Read(id string) (*GameBoard, error) {
 	board := games[id]
 
 	if board == nil {
+		fmt.Println("Board not found")
+		fmt.Println("Total boards:", len(games))
 		return nil, errors.New("Board not found")
 	}
 
