@@ -121,8 +121,14 @@ func AddPlayer(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Getting game board", gameId)
 	board, err := models.LoadGameBoard(gameId)
 
-	if board == nil || err != nil {
+	if board == nil {
 		http.NotFound(w, r)
+		return
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -218,16 +224,16 @@ func ConcurrentUpdatePlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = playerMoveResponse.Board.SaveGameBoard()
+	/*err = playerMoveResponse.Board.SaveGameBoard()
 
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
-	}
+	}*/
 
-	returnBoardAsJson(w, board)
+	returnBoardAsJson(w, &playerMoveResponse.Board)
 
 }
 

@@ -101,10 +101,17 @@ func createNewGameChannel() chan PlayerMove {
 
 func ConcurrentMovePlayer(playerMove PlayerMove) {
 
-	// fetch board
-	board := games[playerMove.GameId]
-
 	var response PlayerMoveResponse
+
+	// fetch board
+	fmt.Println("1. load game board")
+	board, err := LoadGameBoard(playerMove.GameId)
+
+	if err != nil {
+		response = NewPlayerMoveResponse(*board, err)
+		playerMove.ResponseChannel <- response
+		return
+	}
 	// only allow moves when game playing
 	if board.State != PlayingGame {
 		response = NewPlayerMoveResponse(*board, errors.New("Not playing, you cannot move now"))
@@ -112,8 +119,9 @@ func ConcurrentMovePlayer(playerMove PlayerMove) {
 		return
 	}
 
+	fmt.Println("2. fetch current player from board")
 	// check if player belongs to this game
-	playerServerState := board.getPlayerFromServer(playerMove.PlayerToMove.Id)
+	playerServerState := board.getPlayer(playerMove.PlayerToMove.Id)
 
 	if &playerServerState == nil {
 		response = NewPlayerMoveResponse(*board, errors.New("You are not a player in this game."))
@@ -146,6 +154,7 @@ func ConcurrentMovePlayer(playerMove PlayerMove) {
 		playerMove.PlayerToMove.Location.X = 0
 	}
 
+	fmt.Println("3. check cell moving to")
 	cell := board.GetCellAtLocation(playerMove.PlayerToMove.Location)
 
 	switch cell {
@@ -176,13 +185,25 @@ func ConcurrentMovePlayer(playerMove PlayerMove) {
 
 	}
 
+	fmt.Println("4. move player")
 	// update board with player's location
-	fmt.Println("Moving player:", playerServerState.Name)
+	//fmt.Println("Moving player:", playerServerState.Name)
 	playerServerState.Location.X = playerMove.PlayerToMove.Location.X
 	playerServerState.Location.Y = playerMove.PlayerToMove.Location.Y
 
 	// check for player collisions
+	fmt.Println("5. check for player collisions")
 	board.checkPlayerCollisions(playerServerState)
+
+	// save change to board
+	/*err = board.SaveGameBoard()
+	if err != nil {
+		response = NewPlayerMoveResponse(*board, err)
+		playerMove.ResponseChannel <- response
+		return
+	}*/
+
+	fmt.Println("6. return response")
 
 	// no errors
 	response = NewPlayerMoveResponse(*board, nil)
@@ -197,7 +218,7 @@ func (board *GameBoard) MovePlayer(player Player) error {
 	}
 
 	// check if player belongs to this game
-	playerServerState := board.getPlayerFromServer(player.Id)
+	playerServerState := board.getPlayer(player.Id)
 
 	if &playerServerState == nil {
 		return errors.New("You are not a player in this game.")
@@ -375,11 +396,7 @@ func (board *GameBoard) respawnGhost(goGhost *Player) {
 
 }
 
-func (board *GameBoard) getPlayerFromServer(playerId string) *Player {
-
-	// using a range to iterate through an array of objects
-	// works on a copy of the object not a reference
-	// to the object...!!
+func (board *GameBoard) getPlayer(playerId string) *Player {
 
 	return board.Players[playerId]
 
@@ -602,7 +619,7 @@ func concurrentPlayAsCPU(gameId string, playerId string) {
 			return
 		}
 
-		player := board.getPlayerFromServer(playerId)
+		player := board.getPlayer(playerId)
 
 		if &player == nil {
 			fmt.Println("Error player not found in game")
@@ -678,7 +695,7 @@ func playAsCPU(gameId string, playerId string) {
 			return
 		}
 
-		player := board.getPlayerFromServer(playerId)
+		player := board.getPlayer(playerId)
 
 		if &player == nil {
 			fmt.Println("Error player not found in game")

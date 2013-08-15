@@ -402,7 +402,7 @@ func TestMovePlayerWithValidMoveWorks(t *testing.T) {
 		return
 	}
 
-	player := board.getPlayerFromServer(playerId)
+	player := board.getPlayer(playerId)
 
 	if player == nil {
 		t.Errorf("Player not found in game")
@@ -421,7 +421,7 @@ func TestMovePlayerWithValidMoveWorks(t *testing.T) {
 	}
 
 	// fetch moved player from board
-	movedPlayer := board.getPlayerFromServer(playerId)
+	movedPlayer := board.getPlayer(playerId)
 
 	if movedPlayer == nil {
 		t.Errorf("Moved Player not found in game")
