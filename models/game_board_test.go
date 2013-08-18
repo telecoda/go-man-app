@@ -413,10 +413,40 @@ func TestMovePlayerWithValidMoveWorks(t *testing.T) {
 
 	player.Location.X++
 
-	board.ConcurrentMovePlayer(*player)
+	//board.ConcurrentMovePlayer(*player)
 	// move player
-	if err != nil {
-		t.Errorf("Error moving player on board:", err.Error)
+	//if err != nil {
+	//	t.Errorf("Error moving player on board:", err.Error)
+	//	return
+	//}
+
+	playerMoveRequest := new(PlayerMove)
+	playerMoveRequest.GameId = gameId
+	playerMoveRequest.PlayerToMove = *player
+
+	playerResponseChannel := make(chan PlayerMoveResponse)
+
+	playerMoveRequest.ResponseChannel = playerResponseChannel
+
+	// send request to game channel
+	var gameRequestChannel chan PlayerMove
+	gameRequestChannel = GameChannels[gameId]
+
+	if gameRequestChannel == nil {
+		t.Errorf("Error no request channel found for game")
+		return
+	}
+
+	// send
+	gameRequestChannel <- *playerMoveRequest
+
+	// receive response
+	var playerMoveResponse PlayerMoveResponse
+
+	playerMoveResponse = <-playerResponseChannel
+
+	if playerMoveResponse.Error != nil {
+		t.Errorf(playerMoveResponse.Error.Error())
 		return
 	}
 
@@ -476,15 +506,17 @@ func addTestGames() {
 	playingBoardPlayerId = addedPlayer.Id
 
 	// create board at waiting state
-	GamePersister.Create(playingBoard)
+	//GamePersister.Create(playingBoard)
+	playingBoard.CreateGameBoard()
+
 	var board2 *GameBoard
 	board2, err = NewGameBoard("test game", 1, 4, 1)
-
-	GamePersister.Create(board2)
+	board2.CreateGameBoard()
+	//GamePersister.Create(board2)
 
 	var board3 *GameBoard
 	board3, err = NewGameBoard("test game", 1, 4, 1)
-
-	GamePersister.Create(board3)
+	board3.CreateGameBoard()
+	//GamePersister.Create(board3)
 
 }
